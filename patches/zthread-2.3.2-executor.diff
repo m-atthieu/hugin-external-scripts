@@ -1,0 +1,13 @@
+Index: zthreads/src/PoolExecutor.cxx
+===================================================================
+--- zthreads.orig/src/PoolExecutor.cxx	2011-02-16 14:03:15.000000000 +0100
++++ zthreads/src/PoolExecutor.cxx	2011-02-16 14:12:43.000000000 +0100
+@@ -400,7 +400,7 @@
+       void unregisterThread() {
+ 
+         Guard<TaskQueue> g(_taskQueue);
+-        std::remove(_threads.begin(), _threads.end(), ThreadImpl::current());
++	 _threads.erase(std::remove(_threads.begin(), _threads.end(), ThreadImpl::current() ));
+ 
+       }
+ 

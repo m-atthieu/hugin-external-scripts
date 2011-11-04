@@ -1,0 +1,12 @@
+diff -ur ZThread-2.3.2.orig/src/Makefile.in ZThread-2.3.2/src/Makefile.in
+--- ZThread-2.3.2.orig/src/Makefile.in	2005-03-13 10:55:26.000000000 +0100
++++ ZThread-2.3.2/src/Makefile.in	2011-10-17 14:57:13.000000000 +0200
+@@ -137,7 +137,7 @@
+ infodir = @infodir@
+ install_sh = @install_sh@
+ 
+-libdir = $(prefix)/lib
++libdir = $(exec_prefix)/lib
+ libexecdir = @libexecdir@
+ localstatedir = @localstatedir@
+ mandir = @mandir@
