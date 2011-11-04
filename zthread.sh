@@ -1,10 +1,12 @@
 # ------------------
-#      swig
+#      ZThread
 # ------------------
 # $Id:  $
 # Copyright (c) 2007, 2011, Ippei Ukai, Matthieu DESILE
 
 # prepare
+source ../scripts/functions.sh
+check_SetEnv
 
 # -------------------------------
 # 20111017.0 initial 2.3.2
@@ -14,8 +16,8 @@
 
 fail()
 {
-        echo "** Failed at $1 **"
-        exit 1
+    echo "** Failed at $1 **"
+    exit 1
 }
 
 LIBNAME="ZThread"
@@ -36,9 +38,9 @@ done
 #
 # patch
 #
-patch -Np1 < ../scripts/zthread-2.3.2-gcc4.4.diff
-patch -Np1 < ../scripts/zthread-2.3.2-executor.diff
-patch -Np1 < ../scripts/zthread-2.3.2-exec_prefix.diff
+patch -Np1 < ../scripts/patches/zthread-2.3.2-gcc4.4.diff
+patch -Np1 < ../scripts/patches/zthread-2.3.2-executor.diff
+patch -Np1 < ../scripts/patches/zthread-2.3.2-exec_prefix.diff
 
 #
 # compile
@@ -96,7 +98,7 @@ do
     
     make clean;
     make || fail "failed at make step of $ARCH";
-    if [ "$ARCH" = '_i386' ] ; then
+    if [ "$ARCH" = 'i386' -o "$ARCH" = 'x86_64' ] ; then
 	echo 'self compiling'
 	cd src
 	env \
