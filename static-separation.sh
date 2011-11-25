@@ -8,6 +8,6 @@ if [ -n "lib/*.a" ] ; then
 fi
 if [ ! -d lib-static/wx ] ; then
   mv lib/{pkgconfig,wx} lib-static/
-  ln -s ../lib-static/pkgconfig lib/pkgconfig
-  ln -s ../lib-static/wx        lib/wx
+  cp -a ../lib-static/pkgconfig lib/pkgconfig
+  cp -a ../lib-static/wx        lib/wx
 fi
