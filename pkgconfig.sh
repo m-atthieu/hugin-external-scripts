@@ -32,7 +32,7 @@ mkdir -p "$REPOSITORYDIR/include";
 # compile
 
 # remove 64-bit archs from ARCHS
-remove_64bits_from_ARCH
+#remove_64bits_from_ARCH
 
 for ARCH in $ARCHS
 do

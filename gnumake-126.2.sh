@@ -33,21 +33,7 @@ cd ./make
 # compile
 
 # remove 64-bit archs from ARCHS
-ARCHS_TMP=$ARCHS
-ARCHS=""
-for ARCH in $ARCHS_TMP
-do
-    if [ $ARCH = "i386" -o $ARCH = "i686" -o $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ]
-    then
-	NUMARCH=$(($NUMARCH + 1))
-	if [ -n "$ARCHS" ]
-	then
-	    ARCHS="$ARCHS $ARCH"
-	else
-	    ARCHS=$ARCH
-	fi
-    fi
-done
+#remove_64bits_from_ARCH
 
 for ARCH in $ARCHS
 do    
@@ -72,6 +58,13 @@ do
 	OSVERSION="$ppcOSVERSION"
 	CC=$ppcCC
 	CXX=$ppcCXX
+    elif [ $ARCH = "x86_64" ] ; then
+        TARGET=$x64TARGET
+        MACSDKDIR=$x64MACSDKDIR
+        ARCHARGs="$x64ONLYARG"
+        OSVERSION="$x64OSVERSION"
+        CC=$x64CC
+        CXX=$x64CXX
     fi
     
     env \

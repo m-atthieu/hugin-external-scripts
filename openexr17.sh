@@ -57,6 +57,8 @@ mkdir -p "$REPOSITORYDIR/include";
 NATIVE_CXXFLAGS="-isysroot $NATIVE_SDK -arch $NATIVE_ARCH $NATIVE_OPTIMIZE \
 	-mmacos-version-min=$NATIVE_OSVERSION -D_THREAD_SAFE -O3 -dead_strip";
 
+NATIVE_ARCH=x86_64 # temporary 
+
 g++ -DHAVE_CONFIG_H -I./IlmImf -I./config \
     -I$REPOSITORYDIR/include/OpenEXR -D_THREAD_SAFE \
     -I. -I./config  -I$REPOSITORYDIR/include \

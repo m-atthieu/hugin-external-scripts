@@ -32,7 +32,7 @@ mkdir -p "$REPOSITORYDIR/include";
 
 # remove 64-bit archs from ARCHS (why ?)
 # tclap is just a set of headers, we just need one arch
-remove_64bits_from_ARCH
+#remove_64bits_from_ARCH
 
 for ARCH in $ARCHS
 do
