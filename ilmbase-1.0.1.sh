@@ -151,7 +151,7 @@ done
 
 for ARCH in $ARCHS
 do
-    mkdir -p "$REPOSITORYDIR/lib/pkgconfig";
+    mkdir -p "$REPOSITORYDIR/lib/pkgconfig" || fail "failed creating $REPOSITORYDIR/lib/pkgconfig";
     sed 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' "$REPOSITORYDIR/arch/$ARCH/lib/pkgconfig/IlmBase.pc" > "$REPOSITORYDIR/lib/pkgconfig/IlmBase.pc";
     break;
 done
