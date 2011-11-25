@@ -43,7 +43,9 @@ TOOLKIT="mac"
 if [ $# -eq 1 ]; then
     if [ "$1" = "cocoa" ]; then
 	TOOLKIT="cocoa"
-    fi
+    elif [ "$1" = "mac" ]; then
+	TOOLKIT="mac"
+	fi
 fi
 
 # patch for Snow Leopard
@@ -149,6 +151,7 @@ do
 done
 
 # merge libwx
+echo "merge libwx"
 merge_libraries lib/libwx_"$TOOLKIT"u-$WXVER_FULL.dylib lib/libwx_"$TOOLKIT"u_gl-$WXVER_FULL.dylib
 
 if [ -f "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u-$WXVER_FULL.dylib ]
@@ -177,6 +180,7 @@ then
 fi
 
 # merge setup.h
+echo "merge setup.h"
 for dummy in "wx/setup.h"
 do
     wxmacconf=lib/wx/include/"$TOOLKIT"-unicode-release-$WXVERSION/wx/setup.h
@@ -190,7 +194,7 @@ do
 	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print)
 	whereIsSetup=${whereIsSetup#./arch/*/}
 	popd 
-	cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup" >>"$REPOSITORYDIR/$wxmacconf";
+	cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup" >> "$REPOSITORYDIR/$wxmacconf";
 	continue
     fi
     
@@ -226,7 +230,7 @@ do
     done
 done
 
-#wx-config
+echo "wx-config"
 for ARCH in $ARCHS
 do
     sed -e 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' \
