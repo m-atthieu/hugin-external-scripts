@@ -77,37 +77,14 @@ do
     ARCHARGs=""
     MACSDKDIR=""
     
-    if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
-	TARGET=$i386TARGET
-	MACSDKDIR=$i386MACSDKDIR
-	ARCHARGs="$i386ONLYARG"
-	OSVERSION="$i386OSVERSION"
-	CC=$i386CC
-	CXX=$i386CXX
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	TARGET=$ppcTARGET
-	MACSDKDIR=$ppcMACSDKDIR
-	ARCHARGs="$ppcONLYARG"
-	OSVERSION="$ppcOSVERSION"
-	CC=$ppcCC
-	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	OSVERSION="$ppc64OSVERSION"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
-    elif [ $ARCH = "x86_64" ] ; then
-	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
-    fi
+    compile_setenv
     
     [ -d ./.libs ] && rm -R ./.libs
+    if [ ! -x "configure" -a -x "bootstrap" ]; then
+	configure="./bootstrap"
+    else
+	configure="./configure"
+    fi
     env \
 	CC=$CC CXX=$CXX \
 	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -dead_strip" \
@@ -115,7 +92,7 @@ do
 	CPPFLAGS="-I$REPOSITORYDIR/include" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
 	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+	$configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--without-java \
 	--with-zlib=/usr \
