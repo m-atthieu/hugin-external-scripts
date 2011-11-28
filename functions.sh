@@ -4,10 +4,10 @@ function check_SetEnv()
 	echo "SetEnv.txt is not sourced"
 	exit 1
     fi
-    if [[ ! "$(pwd)" =~ "$(dirname $REPOSITORYDIR)" ]]; then
-	echo "you shall not compile here !"
-	exit -1
-    fi
+    #if [[ ! "$(pwd)" =~ "$(dirname $REPOSITORYDIR)" ]]; then
+	#echo "you shall not compile here !"
+	#exit -1
+    #fi
 }
 
 function compile_setenv()
