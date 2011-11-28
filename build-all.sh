@@ -16,35 +16,45 @@ source SetEnv.txt
 
 rm -rf $REPOSITORYDIR
 
-pre="<<<<<<<<<<<<<<<<<<<< building"
-pst=">>>>>>>>>>>>>>>>>>>>"
+function build()
+{
+    name="$1"
+    dir="../$2"
+    script="../scripts/$3"
+
+    pre="<<<<<<<<<<<<<<<<<<<< building"
+    pst=">>>>>>>>>>>>>>>>>>>>"
+
+    echo "$pre $name $pst" \
+	&& cd "$dir" \
+	|| exit 1 && sh "$script"
+}
 
 # To start this script in the middle, uncomment the next 2 lines and move the "fi" line down as needed
 #if [ -z "this will test will fail" ] ; then; fi
-echo "$pre boost $pst"           && cd ../boost_1_44_0       || exit 1 && sh ../scripts/boost.sh
-echo "$pre expat $pst"           && cd ../expat-2.0.1        || exit 1 && sh ../scripts/libexpat.sh;
-echo "$pre libiconv $pst"        && cd ../libiconv-1.13.1    || exit 1 && sh ../scripts/libiconv.sh;
-echo "$pre gettext $pst"         && cd ../gettext-0.17       || exit 1 && sh ../scripts/gettext.sh
-echo "$pre libjpeg-8 $pst"       && cd ../jpeg-8c            || exit 1 && sh ../scripts/libjpeg.sh;
-echo "$pre libpng $pst"          && cd ../libpng-1.2.44      || exit 1 && sh ../scripts/libpng.sh;
-echo "$pre libtiff $pst"         && cd ../tiff-3.9.2         || exit 1 && sh ../scripts/libtiff.sh;
-echo "$pre wxmac $pst"           && cd ../wxMac-2.8.11       || exit 1 && sh ../scripts/wxmac28.sh;
-echo "$pre ilmbase $pst"         && cd ../ilmbase-1.0.1      || exit 1 && sh ../scripts/ilmbase.sh;
-echo "$pre openexr $pst"         && cd ../openexr-1.6.1      || exit 1 && sh ../scripts/openexr16.sh;
-echo "$pre libpano13 $pst"       && cd ../libpano13-2.9.18   || exit 1 && sh ../scripts/pano13.sh;
-echo "$pre libexiv2 $pst"        && cd ../exiv2-0.19         || exit 1 && sh ../scripts/libexiv2.sh;
-echo "$pre liblcms $pst"         && cd ../lcms-1.19          || exit 1 && sh ../scripts/lcms.sh;
-echo "$pre libxmi $pst"          && cd ../libxmi-1.2         || exit 1 && sh ../scripts/libxmi.sh;
-echo "$pre libglew $pst"         && cd ../glew-1.5.2         || exit 1 && sh ../scripts/libglew.sh;
-echo "$pre gnumake-119 $pst"     && cd ../gnumake-119        || exit 1 && sh ../scripts/gnumake.sh;
+build boost     boost_1_47_0    boost-1.47.0.sh
+build expat     expat-2.0.1     libexpat.sh
+build iconv     libiconv-1.13.1 libiconv-1.13.1.sh
+build gettext   gettext-0.17    gettext-0.17.sh
+build libjpeg-8 jpeg-8c         libjpeg.sh
+build png       libpng-1.2.46   libpng-1.2.46.sh
+build tiff      tiff-3.9.5      libtiff.sh
+build ilmbase   ilmbase-1.0.2   ilmbase-1.0.2.sh
+build openexr   openexr-1.7.0   openexr17.sh
+build libpano13 libpano13.hg    pano13-trunk.sh
+build libexiv2  exiv2-0.22      libexiv2-0.22.sh
+build liblcms   lcms-1.19       lcms.sh
+build libxmi    libxmi-1.2      libxmi.sh
+build libglew   glew-1.5.8      libglew-1.5.8.sh
+build gnumake   gnumake-126.2   gnumake-126.2.sh
+build wxmac     wxMac-2.8.12    wxmac28.sh
 # Correct funky name for the enblend-enfuse-4.0 directory
 if [ ! -d ../enblend-enfuse-4.0 ] && [ -d ../enblend-enfuse-4.0-753b534c819d ] ; then
     ln -s enblend-enfuse-4.0-753b534c819d ../enblend-enfuse-4.0
 fi
-echo "$pre enblend-enfuse $pst"  && cd ../enblend-enfuse-4.0 || exit 1 && sh ../scripts/enblend.sh;
-echo "$pre pkg-config $pst"      && cd ../pkg-config-0.25    || exit 1 && sh ../scripts/pkg-config.sh;
-echo "$pre tclap $pst"           && cd ../tclap-1.2.0        || exit 1 && sh ../scripts/tclap.sh;
-echo "$pre zthread $pst"         && cd ../ZThread-2.3.2      || exit 1 && sh ../scripts/zthread.sh;
+build enblend-enfuse enblend-enfuse-4.0 enblend.sh
+build tclap          tclap-1.2.1        tclap.sh
+build zthread        ZThread-2.3.2      zthread.sh
 
 # Following packages are optional. Uncomment if you are building them
 #echo "$pre autopano-sift-C $pst" && cd ../autopano-sift-C    && sh ../scripts/autopano-sift-C.sh;
