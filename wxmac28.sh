@@ -22,7 +22,6 @@ fail()
     exit 1
 }
 
-
 uname_release=$(uname -r)
 uname_arch=$(uname -p)
 [ $uname_arch = powerpc ] && uname_arch="ppc"
@@ -39,13 +38,14 @@ NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
 
+# Toolkit Choice, default choice is mac (i.e. carbon, 32bit only)
 TOOLKIT="mac"
 if [ $# -eq 1 ]; then
     if [ "$1" = "cocoa" ]; then
 	TOOLKIT="cocoa"
     elif [ "$1" = "mac" ]; then
 	TOOLKIT="mac"
-	fi
+    fi
 fi
 
 # patch for Snow Leopard
@@ -60,7 +60,8 @@ WXVERSION="2.8"
 WXVER_COMP="$WXVERSION.0"
 #WXVER_FULL="$WXVER_COMP.5.0"  # for 2.8.8
 #WXVER_FULL="$WXVER_COMP.6.0"  # for 2.8.10
-WXVER_FULL="$WXVER_COMP.7.0"  # for 2.8.11 & 2.8.12
+#WXVER_FULL="$WXVER_COMP.7.0"  # for 2.8.11
+WXVER_FULL="$WXVER_COMP.8.0"  # for 2.8.12
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
@@ -68,6 +69,9 @@ mkdir -p "$REPOSITORYDIR/include";
 
 # compile
 let NUMARCH="0"
+if [ "$TOOLKIT" = "mac" ]; then
+    remove_64bits_from_ARCH
+fi
 
 for ARCH in $ARCHS
 do
@@ -83,10 +87,10 @@ do
     
     compile_setenv
 
-    if [ "$TOOLKIT" = "ccoca" ]; then
+    if [ "$TOOLKIT" = "cocoa" ]; then
 	withToolkit="--with-cocoa"
     else
-	withToolkit=""
+	withToolkit="--with-mac"
     fi
 
     ARCHARGs=$(echo $ARCHARGs | sed 's/-ftree-vectorize//')
@@ -101,7 +105,7 @@ do
 	../configure --prefix="$REPOSITORYDIR" $withToolkit \
 	--exec-prefix=$REPOSITORYDIR/arch/$ARCH --disable-dependency-tracking \
 	--host="$TARGET" --with-macosx-sdk=$MACSDKDIR --with-macosx-version-min=$OSVERSION \
-	--enable-monolithic --enable-unicode --with-opengl --enable-compat26 --disable-graphics_ctx \
+	--enable-monolithic --enable-unicode --with-opengl --disable-compat26 --disable-graphics_ctx \
 	--enable-shared --disable-debug --enable-aui || fail "configure step for $ARCH";
     
     ### Setup.h is created by configure!
@@ -111,7 +115,7 @@ do
     #then
     # need to find out where setup.h was created. This seems to vary if building on powerpc and
     # is different under 10.4 and 10.5
-    whereIsSetup=$(find . -name setup.h -print)
+    whereIsSetup=$(find . -name setup.h -print | grep $TOOLKIT | head -1)
     whereIsSetup=${whereIsSetup#./}
     echo '#ifndef wxMAC_USE_CORE_GRAPHICS'    >> $whereIsSetup
     echo ' #define wxMAC_USE_CORE_GRAPHICS 0' >> $whereIsSetup
@@ -191,7 +195,7 @@ do
     if [ $NUMARCH -eq 1 ] ; then
 	ARCH=$ARCHS
 	pushd $REPOSITORYDIR
-	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print)
+	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print | grep $TOOLKIT | head -1)
 	whereIsSetup=${whereIsSetup#./arch/*/}
 	popd 
 	cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup" >> "$REPOSITORYDIR/$wxmacconf";
@@ -201,7 +205,7 @@ do
     for ARCH in $ARCHS
     do
 	pushd $REPOSITORYDIR
- 	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print)
+ 	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print | grep $TOOLKIT | head -1)
  	whereIsSetup=${whereIsSetup#./arch/*/}
  	popd 
 	
