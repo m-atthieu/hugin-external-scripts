@@ -1,0 +1,13 @@
+--- libpano13-2.9.18/filter.h	2011-02-22 20:06:38.000000000 +0100
++++ libpano13-2.9.18.new/filter.h	2011-11-29 00:39:05.000000000 +0100
+@@ -1052,8 +1052,8 @@
+         // MacOSX 10.4 has those functions predefined in Carbon API.
+         #include <Carbon/Carbon.h> // CoreServices/TextUtils.h
+     #else
+-        #define		p2cstr( x )	
+-        #define		c2pstr( x )
++        #define		p2cstr( x )	p2cstr(x)
++        #define		c2pstr( x ) c2pstr(x)
+     #endif
+ 
+ #endif
