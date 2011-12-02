@@ -2,25 +2,19 @@
 #     wxMac 2.8
 # ------------------
 # $Id: wxmac28.sh 1902 2007-02-04 22:27:47Z ippei $
-# Copyright (c) 2007-2008, Ippei Ukai
+# Copyright (c) 2007, Ippei Ukai
 
-# 2009-12-04.0 Remove unneeded arguments to make and make install; made make single threaded
 
 # prepare
 source ../scripts/functions.sh
 check_SetEnv
 
 # -------------------------------
-# 20091206.0 sg Script tested and used to build 2009.4.0-RC3
-#               Works Intel: 10.5, 10.6 & Powerpc 10.4, 10.5
-# 20100624.0 hvdw More robust error checking on compilation
+# 20091206.0 sg Script NOT tested but adapted from script used to build 2009.4.0-RC3
+#               The non-debug version works onnl: 10.5, 10.6 & Powerpc 10.4, 10.5
 # -------------------------------
 
-fail()
-{
-    echo "** Failed at $1 **"
-    exit 1
-}
+# init
 
 uname_release=$(uname -r)
 uname_arch=$(uname -p)
@@ -28,9 +22,9 @@ uname_arch=$(uname -p)
 os_dotvsn=${uname_release%%.*}
 os_dotvsn=$(($os_dotvsn - 4))
 case $os_dotvsn in
-    4 ) os_sdkvsn="10.4u" ;;
-    5|6 ) os_sdkvsn=10.$os_dotvsn ;;
-    * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
+ 4 ) os_sdkvsn="10.4u" ;;
+ 5|6 ) os_sdkvsn=10.$os_dotvsn ;;
+ * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
 NATIVE_SDKDIR="/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
@@ -51,16 +45,12 @@ fi
 # patch for Snow Leopard
 thisarch=$(uname -m)
 if [ "$thisarch" = x86_64 ] ; then
-    patch -Np1 < ../scripts/patches/wxMac-2.8.10.patch
+	patch -Np1 < ../scripts/wxMac-2.8.10.patch
 fi
-
-patch -Np1 < ../scripts/patches/wxMac-2.8.12-gcc42-static-extern-appmm.patch
 
 WXVERSION="2.8"
 WXVER_COMP="$WXVERSION.0"
 #WXVER_FULL="$WXVER_COMP.5.0"  # for 2.8.8
-#WXVER_FULL="$WXVER_COMP.6.0"  # for 2.8.10
-#WXVER_FULL="$WXVER_COMP.7.0"  # for 2.8.11
 WXVER_FULL="$WXVER_COMP.8.0"  # for 2.8.12
 
 mkdir -p "$REPOSITORYDIR/bin";
@@ -92,21 +82,20 @@ do
     else
 	withToolkit="--with-mac"
     fi
-
-    ARCHARGs=$(echo $ARCHARGs | sed 's/-ftree-vectorize//')
+ 
     env \
 	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -dead_strip" \
-	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -dead_strip" \
-	CPPFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -dead_strip -I$REPOSITORYDIR/include" \
+	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -g -dead_strip" \
+	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -g -dead_strip" \
+	CPPFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -g -dead_strip -I$REPOSITORYDIR/include" \
 	OBJCFLAGS="-arch $ARCH" \
 	OBJCXXFLAGS="-arch $ARCH" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -arch $ARCH -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
-	../configure --prefix="$REPOSITORYDIR" $withToolkit \
-	--exec-prefix=$REPOSITORYDIR/arch/$ARCH --disable-dependency-tracking \
+	LDFLAGS="-L$REPOSITORYDIR/lib -arch $ARCH -mmacosx-version-min=$OSVERSION -g -dead_strip -prebind" \
+	../configure --prefix="$REPOSITORYDIR" --exec-prefix=$REPOSITORYDIR/arch/$ARCH $withToolkit \
+	--disable-dependency-tracking \
 	--host="$TARGET" --with-macosx-sdk=$MACSDKDIR --with-macosx-version-min=$OSVERSION \
 	--enable-monolithic --enable-unicode --with-opengl --disable-compat26 --disable-graphics_ctx \
-	--enable-shared --disable-debug --enable-aui || fail "configure step for $ARCH";
+	--enable-shared --enable-debug --enable-debugreport;
     
     ### Setup.h is created by configure!
     # For all SDK; CP panel problem still exists.
@@ -115,7 +104,7 @@ do
     #then
     # need to find out where setup.h was created. This seems to vary if building on powerpc and
     # is different under 10.4 and 10.5
-    whereIsSetup=$(find . -name setup.h -print | grep $TOOLKIT | head -1)
+    whereIsSetup=$(find . -name setup.h -print)
     whereIsSetup=${whereIsSetup#./}
     echo '#ifndef wxMAC_USE_CORE_GRAPHICS'    >> $whereIsSetup
     echo ' #define wxMAC_USE_CORE_GRAPHICS 0' >> $whereIsSetup
@@ -123,7 +112,7 @@ do
     echo ''                                   >> $whereIsSetup
     #fi
     make clean;
-    
+
     #hack
     cp utils/wxrc/Makefile utils/wxrc/Makefile-copy;
     echo "all: " > utils/wxrc/Makefile;
@@ -140,54 +129,80 @@ do
 	    ;;
 	* )
 	    echo "OS Version $NATIVE_OSVERSION not supported"; exit 1
-	    ;;
+		 ;;
     esac
     cp $NATIVE_SDKDIR/usr/lib/$dylib_name $REPOSITORYDIR/lib/
     
     # Need to build single-threaded. libwx_macu-2.8.dylib needs to be built before libwx_macu_gl-2.8 to avoid a link error.
     # This is only problematic for Intel builds, where jobs can be >1
-    make --jobs=1 || fail "failed at make step of $ARCH";
-    make install || fail "make install step of $ARCH";
+    make --jobs=1;
+    make install;
     
     rm $REPOSITORYDIR/lib/$dylib_name;
     
     cd ../;
 done
 
+
 # merge libwx
-echo "merge libwx"
-merge_libraries lib/libwx_"$TOOLKIT"u-$WXVER_FULL.dylib lib/libwx_"$TOOLKIT"u_gl-$WXVER_FULL.dylib
-
-if [ -f "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u-$WXVER_FULL.dylib ]
-then
-    install_name_tool \
-	-id "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u-$WXVER_COMP.dylib \
-	"$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u-$WXVER_FULL.dylib;
-    ln -sfn libwx_"$TOOLKIT"u-$WXVER_FULL.dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u-$WXVER_COMP.dylib;
-    ln -sfn libwx_"$TOOLKIT"u-$WXVER_FULL.dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u-$WXVERSION.dylib;
-fi
-
-if [ -f "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u_gl-$WXVER_FULL.dylib ]
-then
-    install_name_tool \
-	-id "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u_gl-$WXVER_COMP.dylib \
-	"$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u_gl-$WXVER_FULL.dylib;
+echo "merging libraries"
+for liba in lib/libwx_"$TOOLKIT"ud-$WXVER_FULL.dylib lib/libwx_"$TOOLKIT"ud_gl-$WXVER_FULL.dylib
+do
+    if [ $NUMARCH -eq 1 ] ; then
+	if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
+	    echo "Moving arch/$ARCHS/$liba to $liba"
+  	    mv "$REPOSITORYDIR/arch/$ARCHS/$liba" "$REPOSITORYDIR/$liba";
+	   #Power programming: if filename ends in "a" then ...
+	    [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
+  	    continue
+	else
+	    echo "Program arch/$ARCHS/$liba not found. Aborting build";
+	    exit 1;
+	fi
+    fi
+    
+    LIPOARGs=""
     for ARCH in $ARCHS
     do
-	install_name_tool \
-	    -change "$REPOSITORYDIR"/arch/$ARCH/lib/libwx_"$TOOLKIT"u-$WXVER_COMP.dylib \
-	    "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u-$WXVER_COMP.dylib \
-	    "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u_gl-$WXVER_FULL.dylib;
+	if [ -f $REPOSITORYDIR/arch/$ARCH/$liba ] ; then
+	    echo "Adding arch/$ARCH/$liba to bundle"
+	    LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$liba"
+	else
+	    echo "File arch/$ARCH/$liba was not found. Aborting build";
+	    exit 1;
+	fi
     done
-    ln -sfn libwx_"$TOOLKIT"u_gl-$WXVER_FULL.dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u_gl-$WXVER_COMP.dylib;
-    ln -sfn libwx_"$TOOLKIT"u_gl-$WXVER_FULL.dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"u_gl-$WXVERSION.dylib;
+    
+    lipo $LIPOARGs -create -output "$REPOSITORYDIR/$liba";
+done
+
+if [ -f "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud-$WXVER_FULL.dylib ] ; then
+    install_name_tool \
+	-id "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud-"$WXVER_COMP".dylib \
+	"$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud-"$WXVER_FULL".dylib;
+    ln -sfn libwx_"$TOOLKIT"ud-"$WXVER_FULL".dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud-"$WXVER_COMP".dylib;
+    ln -sfn libwx_"$TOOLKIT"ud-"$WXVER_FULL".dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud-"$WXVERSION".dylib;
+fi
+if [ -f "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud_gl-"$WXVER_FULL".dylib ] ; then
+  install_name_tool \
+      -id "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud_gl-"$WXVER_COMP".dylib \
+      "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud_gl-"$WXVER_FULL".dylib;
+  for ARCH in $ARCHS
+  do
+      install_name_tool \
+	  -change "$REPOSITORYDIR"/arch/"$ARCH"/lib/libwx_"$TOOLKIT"ud-"$WXVER_COMP".dylib \
+          "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud-"$WXVER_COMP".dylib \
+          "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud_gl-"$WXVER_FULL".dylib;
+  done
+  ln -sfn libwx_"$TOOLKIT"ud_gl-"$WXVER_FULL".dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud_gl-"$WXVER_COMP".dylib;
+  ln -sfn libwx_"$TOOLKIT"ud_gl-"$WXVER_FULL".dylib "$REPOSITORYDIR"/lib/libwx_"$TOOLKIT"ud_gl-"$WXVERSION".dylib;
 fi
 
 # merge setup.h
-echo "merge setup.h"
+echo "merging setup.h"
 for dummy in "wx/setup.h"
 do
-    wxmacconf=lib/wx/include/"$TOOLKIT"-unicode-release-$WXVERSION/wx/setup.h
+    wxmacconf=lib/wx/include/"$TOOLKIT"-unicode-debug-$WXVERSION/wx/setup.h
     
     mkdir -p $(dirname "$REPOSITORYDIR/$wxmacconf")
     echo ""  >$REPOSITORYDIR/$wxmacconf
@@ -195,17 +210,18 @@ do
     if [ $NUMARCH -eq 1 ] ; then
 	ARCH=$ARCHS
 	pushd $REPOSITORYDIR
-	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print | grep release | grep $TOOLKIT | head -1)
+	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print | grep debug | grep $TOOLKIT | head -1)
 	whereIsSetup=${whereIsSetup#./arch/*/}
 	popd 
-	cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup" >> "$REPOSITORYDIR/$wxmacconf";
+	cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup" >>"$REPOSITORYDIR/$wxmacconf";
 	continue
     fi
     
     for ARCH in $ARCHS
     do
-	pushd $REPOSITORYDIR
- 	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print | grep release | grep $TOOLKIT | head -1)
+	
+ 	pushd $REPOSITORYDIR
+ 	whereIsSetup=$(find ./arch/$ARCH/lib/wx -name setup.h -print | grep debug | grep $TOOLKIT | head -1)
  	whereIsSetup=${whereIsSetup#./arch/*/}
  	popd 
 	
@@ -227,19 +243,19 @@ do
 	    cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup"      >> "$REPOSITORYDIR/$wxmacconf";
 	    echo ""                                            >> "$REPOSITORYDIR/$wxmacconf";
 	    echo "#endif"                                      >> "$REPOSITORYDIR/$wxmacconf";
-
 	else
 	    echo "Unhandled ARCH: $ARCH. Aborting build."; exit 1
 	fi
     done
+    
 done
 
-echo "wx-config"
+#wx-config
+echo "modifying wx-config"
 for ARCH in $ARCHS
 do
     sed -e 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' \
-	-e 's/^is_cross \&\& target.*$//' \
 	-e 's/-arch '$ARCH'//' \
-	$REPOSITORYDIR/arch/$ARCH/bin/wx-config > $REPOSITORYDIR/bin/wx-config
+      $REPOSITORYDIR/arch/$ARCH/bin/wx-config > $REPOSITORYDIR/bin/wx-config
     break;
 done
