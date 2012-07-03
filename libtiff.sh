@@ -28,11 +28,11 @@ os_dotvsn=${uname_release%%.*}
 os_dotvsn=$(($os_dotvsn - 4))
 case $os_dotvsn in
     4 ) os_sdkvsn="10.4u" ;;
-    5|6 ) os_sdkvsn=10.$os_dotvsn ;;
+    5|6|7 ) os_sdkvsn=10.$os_dotvsn ;;
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
@@ -99,6 +99,9 @@ do
 	    ;;
 	10.5 | 10.6 )
 	    crt1obj="lib/crt1.$NATIVE_OSVERSION.o"
+	    ;;
+	10.7 )
+	    crt1obj="lib/crt1.10.6.o"
 	    ;;
 	* )
 	    echo "Unsupported OS Version: $NATIVE_OSVERSION";

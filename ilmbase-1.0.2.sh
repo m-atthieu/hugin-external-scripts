@@ -34,8 +34,8 @@ mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
 
-g++ "./Half/eLut.cpp" -o "./Half/eLut-native"
-g++ "./Half/toFloat.cpp" -o "./Half/toFloat-native"
+c++ "./Half/eLut.cpp" -o "./Half/eLut-native"
+c++ "./Half/toFloat.cpp" -o "./Half/toFloat-native"
 
 [ -f "./Half/Makefile.in-original" ] || mv "./Half/Makefile.in" "./Half/Makefile.in-original"
 sed -e 's/\.\/eLut/\.\/eLut-native/' \
@@ -63,20 +63,6 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	TARGET=$ppcTARGET
-	MACSDKDIR=$ppcMACSDKDIR
-	ARCHARGs="$ppcONLYARG"
-	OSVERSION="$ppcOSVERSION"
-	CC=$ppcCC
-	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	OSVERSION="$ppc64OSVERSION"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
@@ -85,6 +71,8 @@ do
 	CC=$x64CC
 	CXX=$x64CXX
     fi
+
+    rm -f libtool libtool-bk
     
     env \
 	CC=$CC CXX=$CXX \
@@ -103,8 +91,8 @@ do
     sed -e "s#-dynamiclib#-dynamiclib -arch $ARCH -isysroot $MACSDKDIR#g" libtool-bk > libtool;
     chmod +x libtool
     
- #hack for apple-gcc 4.2
-    if [ ${CC#*-} = 4.2 ] ; then
+    #hack for apple-gcc 4.2
+    if [ ${CC##*-} = 4.2 ] ; then
 	for dir in Half Iex IlmThread Imath
 	do
 	    mv $dir/Makefile $dir/Makefile.bk

@@ -27,7 +27,7 @@ fail()
 }
 
 # patch
-patch -Np1 < ../scripts/patches/patches/libpano13-2.9.18-c2pstr.diff
+#patch -Np1 < ../scripts/patches/patches/libpano13-2.9.18-c2pstr.diff
 
 # AC_INIT([pano13], [2.9.14], BUG-REPORT-ADDRESS)
 libpanoVsn=$(grep "AC_INIT" configure.ac|cut -f 2 -d ,|cut -c 7-8)

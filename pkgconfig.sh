@@ -29,6 +29,9 @@ mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
+# patch
+patch -Np0 < ../scripts/patches/pkgconfig-0.25-lion-clang.patch
+
 # compile
 
 # remove 64-bit archs from ARCHS

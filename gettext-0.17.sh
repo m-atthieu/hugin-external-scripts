@@ -47,6 +47,9 @@ GETTEXTVERPO_F="0.4.0"
 LIBINTLVER_F="8.0.2"
 LIBINTLVER_M="8"
 
+# patch
+#patch -Np1 < ../scripts/patches/gettext-0.17-lion.patch
+
 # compile
 
 for ARCH in $ARCHS
@@ -65,20 +68,6 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	TARGET=$ppcTARGET
-	MACSDKDIR=$ppcMACSDKDIR
-	ARCHARGs="$ppcONLYARG"
-	OSVERSION="$ppcOSVERSION"
-	CC=$ppcCC
-	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	OSVERSION="$ppc64OSVERSION"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
@@ -100,9 +89,10 @@ do
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--enable-shared --enable-static --disable-csharp --disable-java \
-	--with-included-gettext --with-included-glib \
+	--with-included-gettext --with-included-glib -with-libiconv=native \
 	--with-included-libxml --without-examples --with-libexpat-prefix=$REPOSITORYDIR \
 	--with-included-libcroco  --without-emacs --with-libiconf-prefix=$REPOSITORYDIR || fail "configure step for $ARCH" ;
+	# --with-libiconf-prefix=$REPOSITORYDIR
     
     make clean;
     make || fail "failed at make step of $ARCH";

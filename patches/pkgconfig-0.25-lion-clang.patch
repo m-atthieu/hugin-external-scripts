@@ -1,0 +1,13 @@
+--- glib-1.2.10/glib.h.orig	2012-04-19 11:20:45.000000000 +0200
++++ glib-1.2.10/glib.h	2012-04-19 11:46:11.000000000 +0200
+@@ -209,6 +209,10 @@
+ #      undef G_CAN_INLINE
+ #      define G_INLINE_FUNC extern
+ #    endif
++#    if defined (__APPLE__)
++#      undef G_INLINE_FUNC
++#      define G_INLINE_FUNC static inline
++#    endif
+ #  else /* !__GNUC__ */
+ #    ifdef G_CAN_INLINE
+ #      define G_INLINE_FUNC static inline

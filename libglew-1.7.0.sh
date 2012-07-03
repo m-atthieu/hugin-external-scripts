@@ -15,8 +15,8 @@ check_SetEnv
 # -------------------------------
 
 GLEW_MAJOR=1
-GLEW_MINOR=5
-GLEW_REV=8
+GLEW_MINOR=7
+GLEW_REV=0
 
 fail()
 {
@@ -58,6 +58,12 @@ case $NATIVE_OSVERSION in
 	;;
 esac
 
+# patch 1.7 for gcc 4.6
+cp config/Makefile.darwin config/Makefile.darwin.org
+cp config/Makefile.darwin-x86_64 config/Makefile.darwin-x86_64.org
+sed 's/-no-cpp-precomp//' config/Makefile.darwin.org > config/Makefile.darwin
+sed 's/-no-cpp-precomp//' config/Makefile.darwin-x86_64.org > config/Makefile.darwin-x86_64
+
 let NUMARCH="0"
 for i in $ARCHS
 do
@@ -85,18 +91,6 @@ do
 	ARCHARGs="$i386ONLYARG"
 	CC=$i386CC
 	CXX=$i386CXX
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	TARGET=$ppcTARGET
-	MACSDKDIR=$ppcMACSDKDIR
-	ARCHARGs="$ppcONLYARG"
-	CC=$ppcCC
-	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR

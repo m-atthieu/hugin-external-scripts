@@ -33,13 +33,13 @@ os_dotvsn=${uname_release%%.*}
 os_dotvsn=$(($os_dotvsn - 4))
 case $os_dotvsn in
     4 ) os_sdkvsn="10.4u" ;;
-    5|6 ) os_sdkvsn=10.$os_dotvsn ;;
+    5|6|7 ) os_sdkvsn=10.$os_dotvsn ;;
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
-NATIVE_ARCH=$uname_arch
+NATIVE_ARCH="$uname_arch"
 NATIVE_OPTIMIZE=""
 
 # init
@@ -57,16 +57,16 @@ mkdir -p "$REPOSITORYDIR/include";
 NATIVE_CXXFLAGS="-isysroot $NATIVE_SDK -arch $NATIVE_ARCH $NATIVE_OPTIMIZE \
 	-mmacos-version-min=$NATIVE_OSVERSION -D_THREAD_SAFE -O3 -dead_strip";
 
-if [ $NUMARCH -eq 1 -a $ARCHS = "x86_64" ]; then
+if [ $NUMARCH -eq 1 -a "$ARCHS" = "x86_64" ]; then
     NATIVE_ARCH=x86_64 # workaround
 fi
 
-g++ -DHAVE_CONFIG_H -I./IlmImf -I./config \
+c++ -DHAVE_CONFIG_H -I./IlmImf -I./config \
     -I$REPOSITORYDIR/include/OpenEXR -D_THREAD_SAFE \
     -I. -I./config  -I$REPOSITORYDIR/include \
     -I/usr/include -arch $NATIVE_ARCH $NATIVE_OPTIMIZE -ftree-vectorize \
-    -mmacosx-version-min=$NATIVE_OSVERSION -O3 -dead_strip  -L"$NATIVE_LIBHALF_DIR" -lHalf \
-    -o "./IlmImf/b44ExpLogTable-native" ./IlmImf/b44ExpLogTable.cpp
+    -mmacosx-version-min=$NATIVE_OSVERSION -O3 -dead_strip  -L$NATIVE_LIBHALF_DIR -lHalf \
+    -o ./IlmImf/b44ExpLogTable-native ./IlmImf/b44ExpLogTable.cpp
 
 if [ -f "./IlmImf/b44ExpLogTable-native" ] ; then
     echo "Created b44ExpLogTable-native"
@@ -135,6 +135,9 @@ do
 	    ;;
 	10.5 | 10.6 )
 	    crt1obj="lib/crt1.$NATIVE_OSVERSION.o"
+	    ;;
+	10.7 )
+	    crt1obj="lib/crt1.10.6.o"
 	    ;;
 	 * )
 	    echo "Unsupported OS Version: $NATIVE_OSVERSION";

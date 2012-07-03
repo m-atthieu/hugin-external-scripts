@@ -48,6 +48,10 @@ GETTEXTVERPO_F="0"
 LIBINTLVER_F="8"
 LIBINTLVER_M="8"
 
+# patch
+# lion + xcode 4.3
+#patch -Np0 < ../scripts/patches/gettext-0.18.1.1-lion.patch
+
 # compile
 
 for ARCH in $ARCHS
@@ -66,20 +70,7 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	TARGET=$ppcTARGET
-	MACSDKDIR=$ppcMACSDKDIR
-	ARCHARGs="$ppcONLYARG"
-	OSVERSION="$ppcOSVERSION"
-	CC=$ppcCC
-	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	OSVERSION="$ppc64OSVERSION"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
+	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
@@ -87,21 +78,22 @@ do
 	OSVERSION="$x64OSVERSION"
 	CC=$x64CC
 	CXX=$x64CXX
+	ARCHFLAG="-m64"
     fi
     
-    export PATH=/usr/bin:$PATH
+    #export PATH=/usr/bin:$PATH
     
     env \
 	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CPPFLAGS="-I$REPOSITORYDIR/include -I/usr/include -no-cpp-precomp" \
+	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+	CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+	CPPFLAGS="-I$REPOSITORYDIR/include -I/usr/include " \
 	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
 	NEXT_ROOT="$MACSDKDIR" \
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--enable-shared --enable-static --disable-csharp --disable-java \
-	--with-included-gettext --with-included-glib \
+	--with-included-gettext --with-included-glib --disable-openmp \
 	--with-included-libxml --without-examples --with-libexpat-prefix=$REPOSITORYDIR \
 	--with-included-libcroco  --without-emacs --with-libiconf-prefix=$REPOSITORYDIR || fail "configure step for $ARCH" ;
     

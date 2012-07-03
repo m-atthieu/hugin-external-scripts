@@ -1,0 +1,16 @@
+diff -ur gettext-0.17.orig/gettext-tools/gnulib-lib/stpncpy.c gettext-0.17/gettext-tools/gnulib-lib/stpncpy.c
+--- gettext-0.17.orig/gettext-tools/gnulib-lib/stpncpy.c	2007-10-07 22:29:35.000000000 +0200
++++ gettext-0.17/gettext-tools/gnulib-lib/stpncpy.c	2012-07-02 13:01:13.000000000 +0200
+@@ -23,6 +23,7 @@
+ /* Specification.  */
+ #include <string.h>
+ 
++#ifndef stpncpy
+ #ifndef weak_alias
+ # define __stpncpy stpncpy
+ #endif
+@@ -89,3 +90,4 @@
+ #ifdef weak_alias
+ weak_alias (__stpncpy, stpncpy)
+ #endif
++#endif /* stpncpy */
