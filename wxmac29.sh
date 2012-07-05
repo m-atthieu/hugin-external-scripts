@@ -34,29 +34,41 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
 
-WXVERSION="2.9"
+case "$(basename $(pwd))" in
+    "wxWidgets-2.9.3")
+	WXVERSION="2.9"
 #WXVER_COMP="$WXVERSION.0"     # for 2.8
-WXVER_COMP="$WXVERSION.2"      # for 2.9.2
+	WXVER_COMP="$WXVERSION.3"      # for 2.9.3
 #WXVER_FULL="$WXVER_COMP.5.0"  # for 2.8.8
 #WXVER_FULL="$WXVER_COMP.6.0"  # for 2.8.10
-WXVER_FULL="$WXVER_COMP.7.0"   # for 2.8.11
-WXVER_FULL="$WXVER_COMP.0.0"   # for 2.9.2
+#WXVER_FULL="$WXVER_COMP.7.0"   # for 2.8.11
+	WXVER_FULL="$WXVER_COMP.0.0"   # for 2.9.2
+	;;
+    "wxWidgets-2.9.4")
+	WXVERSION="2.9"
+	WXVER_COMP="$WXVERSION.4"      # for 2.9.4
+	WXVER_FULL="$WXVER_COMP.0.0"
+	;;
+    *)
+	Fail "Unknown wx version"
+esac
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
-
 
 # compile
 let NUMARCH="0"
 
 for ARCH in $ARCHS
 do
+    echo "## compiling for $ARCH ##"
+
     mkdir -p "osx-$ARCH-build";
     cd "osx-$ARCH-build";
     
@@ -74,20 +86,6 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	TARGET=$ppcTARGET
-	MACSDKDIR=$ppcMACSDKDIR
-	ARCHARGs="$ppcONLYARG"
-	OSVERSION="$ppcOSVERSION"
-	CC=$ppcCC
-	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	OSVERSION="$ppc64OSVERSION"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
@@ -140,7 +138,10 @@ do
 	10.4 )
 	    dylib_name="dylib1.o"
 	    ;;
-	10.5 | 10.6 | 10.7)
+	10.5 | 10.6)
+	    dylib_name="dylib1.10.5.o"
+	    ;;
+	10.7)
 	    dylib_name="dylib1.10.5.o"
 	    ;;
 	* )
@@ -158,6 +159,8 @@ do
     
     cd ../;
 done
+
+echo "## merging ##"
 
 # merge libwx
 merge_libraries "lib/libwx_osx_cocoau-$WXVER_FULL.dylib" "lib/libwx_osx_cocoau_gl-$WXVER_FULL.dylib"
@@ -187,13 +190,15 @@ then
     ln -sfn "libwx_osx_cocoau_gl-$WXVER_FULL.dylib" "$REPOSITORYDIR/lib/libwx_osx_cocoau_gl-$WXVERSION.dylib";
 fi
 
+echo "## merging setup.h ##"
+
 # merge setup.h
 for dummy in "wx/setup.h"
 do
     wxmacconf="lib/wx/include/osx_cocoa-unicode-$WXVERSION/wx/setup.h"
     
     mkdir -p $(dirname "$REPOSITORYDIR/$wxmacconf")
-    echo ""  >$REPOSITORYDIR/$wxmacconf
+    echo "" > $REPOSITORYDIR/$wxmacconf
     
     if [ $NUMARCH -eq 1 ] ; then
 	ARCH=$ARCHS
@@ -218,12 +223,6 @@ do
 	    cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup"      >> "$REPOSITORYDIR/$wxmacconf";
 	    echo ""                                            >> "$REPOSITORYDIR/$wxmacconf";
 	    echo "#endif"                                      >> "$REPOSITORYDIR/$wxmacconf";
-	elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	    echo "#if defined(__ppc__) || defined(__ppc64__)"  >> "$REPOSITORYDIR/$wxmacconf";
-	    echo ""                                            >> "$REPOSITORYDIR/$wxmacconf";
-	    cat "$REPOSITORYDIR/arch/$ARCH/$whereIsSetup"      >> "$REPOSITORYDIR/$wxmacconf";
-	    echo ""                                            >> "$REPOSITORYDIR/$wxmacconf";
-	    echo "#endif"                                      >> "$REPOSITORYDIR/$wxmacconf";
 	elif [ $ARCH = "x86_64" ] ; then
 	    echo "#if defined(__x86_64__)"                     >> "$REPOSITORYDIR/$wxmacconf";
 	    echo ""                                            >> "$REPOSITORYDIR/$wxmacconf";
@@ -236,12 +235,20 @@ do
     done
 done
 
-#wx-config
+echo "## merging wx-config ##"
 for ARCH in $ARCHS
 do
+    if [ -L "$REPOSITORYDIR/arch/$ARCH/bin/wx-config" ]; then
+	input=`ls -l $REPOSITORYDIR/arch/$ARCH/bin/wx-config|cut -d '>' -f 2`
+    else
+	input="$REPOSITORYDIR/arch/$ARCH/bin/wx-config"
+    fi
     sed -e 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' \
 	-e 's/^is_cross \&\& target.*$//' \
 	-e 's/-arch '$ARCH'//' \
-	$REPOSITORYDIR/arch/$ARCH/bin/wx-config > $REPOSITORYDIR/bin/wx-config
+	-e 's,include/i386-apple-darwin10-,include/,' \
+	-e 's,-i386-apple-darwin10,,' \
+	$input > $REPOSITORYDIR/bin/wx-config
+    chmod +x $REPOSITORYDIR/bin/wx-config
     break;
 done

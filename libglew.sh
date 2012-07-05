@@ -14,9 +14,6 @@ check_SetEnv
 # 20100624.0 hvdw More robust error checking on compilation
 # -------------------------------
 
-GLEW_MAJOR=1
-GLEW_MINOR=5
-GLEW_REV=2
 
 fail()
 {
@@ -24,7 +21,25 @@ fail()
     exit 1
 }
 
-
+case "$(basename $(pwd))" in
+    "glew-1.5.2")
+	GLEW_MAJOR=1
+	GLEW_MINOR=5
+	GLEW_REV=2
+    "glew-1.5.8")
+	GLEW_MAJOR=1
+	GLEW_MINOR=5
+	GLEW_REV=8
+	;;
+    "glew-1.7.0")
+	GLEW_MAJOR=1
+	GLEW_MINOR=7
+	GLEW_REV=0
+	;;
+    *)
+	fail "Unknown version"
+	;;
+esac
 # init
 uname_release=$(uname -r)
 uname_arch=$(uname -p)
@@ -33,11 +48,11 @@ os_dotvsn=${uname_release%%.*}
 os_dotvsn=$(($os_dotvsn - 4))
 case $os_dotvsn in
     4 ) os_sdkvsn="10.4u" ;;
-    5|6 ) os_sdkvsn=10.$os_dotvsn ;;
+    5|6|7 ) os_sdkvsn=10.$os_dotvsn ;;
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
@@ -49,7 +64,7 @@ case $NATIVE_OSVERSION in
     10.5 )
 	cp -f /usr/share/libtool/config.{guess,sub} ./config/ 
 	;;
-    10.6 )
+    10.6 | 10.7 )
 	cp -f /usr/share/libtool/config/config.{guess,sub} ./config/ 
 	;;
     * )
@@ -57,6 +72,12 @@ case $NATIVE_OSVERSION in
 	exit 1 
 	;;
 esac
+
+# patch 1.7 for gcc 4.6
+cp config/Makefile.darwin config/Makefile.darwin.org
+cp config/Makefile.darwin-x86_64 config/Makefile.darwin-x86_64.org
+sed 's/-no-cpp-precomp//' config/Makefile.darwin.org > config/Makefile.darwin
+sed 's/-no-cpp-precomp//' config/Makefile.darwin-x86_64.org > config/Makefile.darwin-x86_64
 
 let NUMARCH="0"
 for i in $ARCHS
@@ -85,18 +106,6 @@ do
 	ARCHARGs="$i386ONLYARG"
 	CC=$i386CC
 	CXX=$i386CXX
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ] ; then
-	TARGET=$ppcTARGET
-	MACSDKDIR=$ppcMACSDKDIR
-	ARCHARGs="$ppcONLYARG"
-	CC=$ppcCC
-	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR

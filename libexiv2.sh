@@ -25,9 +25,19 @@ fail()
     exit 1
 }
 
+case "$(basename $(pwd))" in
+    "exiv2-0.19")
+	EXIV2VER_M="6"
+	EXIV2VER_FULL="$EXIV2VER_M.3.1"
+	;;
+    "exiv2-0.22")
+	EXIV2VER_M="11"
+	EXIV2VER_FULL="$EXIV2VER_M.3.1"
+	;;
+    *)
+	fail "Unknown version"
+esac
 
-EXIV2VER_M="11"
-EXIV2VER_FULL="$EXIV2VER_M.3.1"
 
 let NUMARCH="0"
 

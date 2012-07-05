@@ -14,6 +14,7 @@ check_SetEnv
 # 20091206.0 sg Script tested and used to build 2009.4.0-RC3
 # 20100116.0 HvdW Correct script for libintl install_name in libgettext*.dylib
 # 20100624.0 hvdw More robust error checking on compilation
+# 20111102.0 mde bump to 0.18.1.1
 # -------------------------------
 
 # init
@@ -36,19 +37,38 @@ mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
-GETTEXTVER_M="0"
-GEETTEXTVER_FULL="$GETTEXTVER_M.17"
-MAIN_LIB_VER="0"
-FULL_LIB_VER="$MAIN_LIB_VER.17"
-ASPRINTFVER_F="0.0.0"
-ASPRINTFVER_M="0"
-GETTEXTVERPO_M="0"
-GETTEXTVERPO_F="0.4.0"
-LIBINTLVER_F="8.0.2"
-LIBINTLVER_M="8"
+case "$(basename $(pwd))" in 
+    "gettext-0.17")
+	GETTEXTVER_M="0"
+	GEETTEXTVER_FULL="$GETTEXTVER_M.17"
+	MAIN_LIB_VER="0"
+	FULL_LIB_VER="$MAIN_LIB_VER.17"
+	ASPRINTFVER_F="0.0.0"
+	ASPRINTFVER_M="0"
+	GETTEXTVERPO_M="0"
+	GETTEXTVERPO_F="0.4.0"
+	LIBINTLVER_F="8.0.2"
+	LIBINTLVER_M="8"
+	;;
+    "gettext-0.18.1.1")
+	GETTEXTVER_M="0"
+	GEETTEXTVER_FULL="$GETTEXTVER_M.18"
+	MAIN_LIB_VER="0"
+	FULL_LIB_VER="$MAIN_LIB_VER.18.1"
+	ASPRINTFVER_F="0.0.0"
+	ASPRINTFVER_M="0"
+	GETTEXTVERPO_M="0"
+	GETTEXTVERPO_F="0.4.0"
+	LIBINTLVER_F="8.0.2"
+	LIBINTLVER_M="8"
+	;;
+    *)
+	fail "Unknown version"
+esac
 
 # patch
-#patch -Np1 < ../scripts/patches/gettext-0.17-lion.patch
+# lion + xcode 4.3
+#patch -Np0 < ../scripts/patches/gettext-0.18.1.1-lion.patch
 
 # compile
 
@@ -68,6 +88,7 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
+	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
@@ -75,24 +96,24 @@ do
 	OSVERSION="$x64OSVERSION"
 	CC=$x64CC
 	CXX=$x64CXX
+	ARCHFLAG="-m64"
     fi
     
-    export PATH=/usr/bin:$PATH
+    #export PATH=/usr/bin:$PATH
     
     env \
 	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CPPFLAGS="-I$REPOSITORYDIR/include -I/usr/include -no-cpp-precomp" \
+	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+	CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+	CPPFLAGS="-I$REPOSITORYDIR/include -I/usr/include " \
 	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
 	NEXT_ROOT="$MACSDKDIR" \
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--enable-shared --enable-static --disable-csharp --disable-java \
-	--with-included-gettext --with-included-glib -with-libiconv=native \
+	--with-included-gettext --with-included-glib --disable-openmp \
 	--with-included-libxml --without-examples --with-libexpat-prefix=$REPOSITORYDIR \
 	--with-included-libcroco  --without-emacs --with-libiconf-prefix=$REPOSITORYDIR || fail "configure step for $ARCH" ;
-	# --with-libiconf-prefix=$REPOSITORYDIR
     
     make clean;
     make || fail "failed at make step of $ARCH";
@@ -100,7 +121,6 @@ do
 done
 
 # merge libgettext
-
 merge_libraries "lib/libgettextlib-$FULL_LIB_VER.dylib" "lib/libgettextpo.$GETTEXTVERPO_F.dylib" "lib/libgettextsrc-$FULL_LIB_VER.dylib"
 merge_libraries "lib/libasprintf.$ASPRINTFVER_F.dylib" "lib/libasprintf.a" "lib/libintl.$LIBINTLVER_F.dylib" "lib/libintl.a"
 
@@ -126,7 +146,7 @@ if [ -f "$REPOSITORYDIR/lib/libasprintf.$ASPRINTFVER_F.dylib" ] ; then
  ln -sfn libasprintf.$ASPRINTFVER_F.dylib $REPOSITORYDIR/lib/libasprintf.dylib;
 fi
 
-if [ -f "$REPOSITORYDIR/lib/libintl.8.0.2.dylib" ] ; then
+if [ -f "$REPOSITORYDIR/lib/libintl.$LIBINTLVER_F.dylib" ] ; then
  install_name_tool -id "$REPOSITORYDIR/lib/libintl.$LIBINTLVER_F.dylib" "$REPOSITORYDIR/lib/libintl.$LIBINTLVER_F.dylib"
  ln -sfn libintl.$LIBINTLVER_F.dylib $REPOSITORYDIR/lib/libintl.8.dylib;
  ln -sfn libintl.$LIBINTLVER_F.dylib $REPOSITORYDIR/lib/libintl.dylib;

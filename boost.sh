@@ -5,8 +5,6 @@
 # Copyright (c) 2007-2008, Ippei Ukai
 
 # prepare
-source ../scripts/functions.sh
-check_SetEnv
 
 # -------------------------------
 # 20091206.0 sg Script tested and used to build 2009.4.0-RC3
@@ -16,38 +14,89 @@ check_SetEnv
 # 20100831.0 hvdw Upgraded to 1_44
 # 20100920.0 hvdw Add removed libboost_system again and add iostreams and regex
 # 20100920.1 hvdw Add date_time as well
-# 20120418.0 mde update for 1.49
+# 20111230.0 hvdw Adapt for versions >= 1.46. slightly different source tree structure
+# 20111230.1 hvdw Correct stupid typo
 # -------------------------------
 
 fail()
 {
-    echo "** Failed at $1 **"
-    exit 1
+        echo "** Failed at $1 **"
+        exit 1
 }
 
+case "$(basename $(pwd))" in
+    "boost_1_44_0")
+	BOOST_VER="1_44"
+	;;
+    "boost_1_45_0")
+	BOOST_VER="1_45"
+	;;
+    "boost_1_46_0"|"boost_1_46_1")
+	BOOST_VER="1_46"
+	;;
+    "boost_1_47_0")
+	BOOST_VER="1_47"
+	;;
+    "boost_1_48_0")
+	BOOST_VER="1_48"
+	;;
+    "boost_1_49_0")
+	BOOST_VER="1_49"
+	;;
+    "boost_1_50_0")
+	BOOST_VER="1_50"
+	;;
+    *)
+	echo "Unknown boost version. Aborting"
+	exit 1
+esac
 
-BOOST_VER="1_49"
+# Uncomment correct version
+
+echo "\n## Version set to $BOOST_VER ##\n"
 
 # install headers
+
 mkdir -p "$REPOSITORYDIR/include"
 rm -rf "$REPOSITORYDIR/include/boost";
+echo "\n## First copying all boost includes to $REPOSITORYDIR/include/ ##"
+echo "## This will take some time ##\n"
 cp -R "./boost" "$REPOSITORYDIR/include/";
 
-
-# compile bjam
-if [ $BOOST_VER = "1_47" -o $BOOST_VER = "1_49" ]; then
-    ./bootstrap.sh
-    BJAM=$(ls ./b2)
-else
-    cd "./tools/jam/src";
-    sh "build.sh";
-    cd "../../../";
-    BJAM=$(ls ./tools/jam/src/bin.mac*/bjam)
-fi
-
-echo "Using BJAM = $BJAM"
+echo "## First compiling bjam ##\n"
+case "$BOOST_VER" in
+    1_44|1_45)
+	 cd "./tools/jam/src";
+	 sh "build.sh";
+	 cd "../../../";
+	 BJAM=$(ls ./tools/jam/src/bin.mac*/bjam)
+	 ;;
+    1_46)
+	perl -p -i -e 's/-no-cpp-precomp//' tools/build/v2/tools/darwin.jam
+	 cd "./tools/build/v2/engine/src"
+	 sh "build.sh"
+	 cd "../../../../../"
+	 BJAM=$(ls ./tools/build/v2/engine/src/bin.mac*/bjam)
+	 echo $BJAM
+	 ;;
+    1_47|1_48|1_49|1_50)
+	perl -p -i -e 's/-no-cpp-precomp//' tools/build/v2/tools/darwin.jam
+	 cd "./tools/build/v2/engine"
+	 sh "build.sh"
+	 cd "../../../../"
+	 BJAM=$(ls ./tools/build/v2/engine/bin.mac*/bjam)
+	 ;;
+    *)
+	echo "Unknown version, cannot compile bjam"
+	exit 1
+esac
+echo "BJAM command is: $BJAM"
+echo "## Done compiling bjam ##"
 
 # init
+
+ORGPATH=$PATH
+
 let NUMARCH="0"
 
 for i in $ARCHS
@@ -57,14 +106,15 @@ done
 
 mkdir -p "$REPOSITORYDIR/lib";
 
+
 # compile boost_thread, filesystem, system, regex, iostreams, date_time and signals
 
 for ARCH in $ARCHS
 do
-    echo "Building boost for arch : $ARCH"
+    echo "\n## Now building architecture $ARCH ##\n"
     rm -rf "stage-$ARCH";
     mkdir -p "stage-$ARCH";
-
+    
     if [ $ARCH = "i386" -o $ARCH = "i686" ]
     then
 	MACSDKDIR=$i386MACSDKDIR
@@ -74,24 +124,9 @@ do
 	boostADDRESSMODEL="32"
 	export CC=$i386CC;
 	export CXX=$i386CXX;
-    elif [ $ARCH = "ppc" -o $ARCH = "ppc750" -o $ARCH = "ppc7400" ]
-    then
-	MACSDKDIR=$ppcMACSDKDIR
-	OSVERSION=$ppcOSVERSION
-	OPTIMIZE=$ppcOPTIMIZE
-	boostARCHITECTURE="power"
-	boostADDRESSMODEL="32"
-	export CC=$ppcCC;
-	export CXX=$ppcCXX;
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ]
-    then
-	MACSDKDIR=$ppc64MACSDKDIR
-	OSVERSION=$ppc64OSVERSION
-	OPTIMIZE=$ppc64OPTIMIZE
-	boostARCHITECTURE="power"
-	boostADDRESSMODEL="64"
-	export CC=$ppc64CC;
-	export CXX=$ppc64CXX;
+	export ARCHTARGET=$i386TARGET;
+	myPATH=$ORGPATH
+	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ]
     then
 	MACSDKDIR=$x64MACSDKDIR
@@ -101,43 +136,63 @@ do
 	boostADDRESSMODEL="64"
 	export CC=$x64CC;
 	export CXX=$x64CXX;
+	export ARCHTARGET=$x86_64TARGET;
+	ARCHFLAG="-m64"
+	myPATH=/usr/local/bin:$PATH
     fi
-        
+    
+    # env $myPATH
+    
     SDKVRSION=$(echo $MACSDKDIR | sed 's/^[^1]*\([[:digit:]]*\.[[:digit:]]*\).*/\1/')
     
-    if [ "$CXX" = "" ] 
-    then
+    echo "CXX should now be known: $CXX"
+    if [ "$CXX" = "" ] ; then
 	boostTOOLSET="--toolset=darwin"
 	CXX="g++"
     else
-	echo "using darwin : : $CXX ;" > ./TEMP-userconf.jam
-	boostTOOLSET="--user-config=./TEMP-userconf.jam"
+	#macosx-version : -isysroot $(sdk)
+	#macosx-version-min : -mmacosx-version-min=$(version)
+	if [ "$CXX" = "g++-4.7" ]; then
+	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
+	elif [ "$CXX" = "llvm-g++-4.2" ]; then
+	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
+	else
+	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
+	fi
+	boostTOOLSET="--user-config=./$ARCH-userconf.jam"
     fi
     
+    
     # hack that sends extra arguments to g++
-    $BJAM -a --stagedir="stage-$ARCH" --prefix=$REPOSITORYDIR $boostTOOLSET -n stage \
-	--with-thread --with-filesystem --with-system --with-regex --with-iostreams --with-date_time --with-signals \
+    $BJAM -a --stagedir="stage-$ARCH" --prefix=$REPOSITORYDIR $boostTOOLSET \
+	--with-thread --with-filesystem --with-system --with-regex --with-iostreams \
+	--with-date_time --with-signals \
 	variant=release \
-	architecture="$boostARCHITECTURE" address-model="$boostADDRESSMODEL" \
-	macosx-version="$SDKVRSION" macosx-version-min="$OSVERSION" \
-	| grep "^    " | sed 's/"//g' | sed s/$CXX/$CXX\ "$OPTIMIZE"/  \
-	| while read COMMAND
-    do
-	echo "running command: $COMMAND"
-	$COMMAND
-    done;
-    echo "Done building for arch : $ARCH"
+	architecture="$boostARCHITECTURE" address-model="$boostADDRESSMODEL" 
 
-    for name in 'thread' 'filesystem' 'system' 'regex' 'iostreams' 'date_time' 'signals'; do
-	for ext in 'a' 'dylib'; do
-	    mv ./stage-$ARCH/lib/libboost_$name.$ext ./stage-$ARCH/lib/libboost_$name-$BOOST_VER.$ext || fail "failed moving $ARCH/lib/libboost_$name.$ext"
-	done
-    done
+    mv ./stage-$ARCH/lib/libboost_thread.dylib ./stage-$ARCH/lib/libboost_thread-$BOOST_VER.dylib
+    mv ./stage-$ARCH/lib/libboost_thread.a ./stage-$ARCH/lib/libboost_thread-$BOOST_VER.a
+    mv ./stage-$ARCH/lib/libboost_filesystem.dylib ./stage-$ARCH/lib/libboost_filesystem-$BOOST_VER.dylib
+    mv ./stage-$ARCH/lib/libboost_filesystem.a ./stage-$ARCH/lib/libboost_filesystem-$BOOST_VER.a
+    mv ./stage-$ARCH/lib/libboost_system.dylib ./stage-$ARCH/lib/libboost_system-$BOOST_VER.dylib
+    mv ./stage-$ARCH/lib/libboost_system.a ./stage-$ARCH/lib/libboost_system-$BOOST_VER.a
+    mv ./stage-$ARCH/lib/libboost_regex.dylib ./stage-$ARCH/lib/libboost_regex-$BOOST_VER.dylib
+    mv ./stage-$ARCH/lib/libboost_regex.a ./stage-$ARCH/lib/libboost_regex-$BOOST_VER.a
+    mv ./stage-$ARCH/lib/libboost_iostreams.dylib ./stage-$ARCH/lib/libboost_iostreams-$BOOST_VER.dylib
+    mv ./stage-$ARCH/lib/libboost_iostreams.a ./stage-$ARCH/lib/libboost_iostreams-$BOOST_VER.a
+    mv ./stage-$ARCH/lib/libboost_date_time.dylib ./stage-$ARCH/lib/libboost_date_time-$BOOST_VER.dylib
+    mv ./stage-$ARCH/lib/libboost_date_time.a ./stage-$ARCH/lib/libboost_date_time-$BOOST_VER.a
+    mv ./stage-$ARCH/lib/libboost_signals.dylib ./stage-$ARCH/lib/libboost_signals-$BOOST_VER.dylib
+    mv ./stage-$ARCH/lib/libboost_signals.a ./stage-$ARCH/lib/libboost_signals-$BOOST_VER.a
 done
 
+#read pipo
+
 # merge libboost_thread libboost_filesystem libboost_system libboost_regex libboost_iostreams libboost_signals
+
 for liba in "lib/libboost_thread-$BOOST_VER.a" "lib/libboost_filesystem-$BOOST_VER.a" "lib/libboost_system-$BOOST_VER.a" "lib/libboost_regex-$BOOST_VER.a" "lib/libboost_iostreams-$BOOST_VER.a" "lib/libboost_date_time-$BOOST_VER.a" "lib/libboost_signals-$BOOST_VER.a" "lib/libboost_thread-$BOOST_VER.dylib"  "lib/libboost_filesystem-$BOOST_VER.dylib" "lib/libboost_system-$BOOST_VER.dylib" "lib/libboost_regex-$BOOST_VER.dylib"  "lib/libboost_iostreams-$BOOST_VER.dylib" "lib/libboost_date_time-$BOOST_VER.dylib" "lib/libboost_signals-$BOOST_VER.dylib"
 do
+    
     if [ $NUMARCH -eq 1 ] ; then
 	if [ -f stage-$ARCHS/$liba ] ; then
 	    echo "Moving stage-$ARCHS/$liba to $liba"
@@ -152,7 +207,9 @@ do
     fi
     
     LIPOARGs=""
-    for ARCH in $ARCHS; do
+    
+    for ARCH in $ARCHS
+    do
 	if [ -f stage-$ARCH/$liba ] ; then
 	    echo "Adding stage-$ARCH/$liba to bundle"
   	    LIPOARGs="$LIPOARGs stage-$ARCH/$liba"
@@ -163,9 +220,11 @@ do
     done
     
     lipo $LIPOARGs -create -output "$REPOSITORYDIR/$liba";
-    # Power programming: if filename ends in "a" then ...
+ #Power programming: if filename ends in "a" then ...
     [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
+    
 done
+
 
 if [ -f "$REPOSITORYDIR/lib/libboost_thread-$BOOST_VER.a" ] ; then
     ln -sfn libboost_thread-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_thread.a;
@@ -180,7 +239,7 @@ fi
 if [ -f "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" ]; then
     install_name_tool -id "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
     ln -sfn libboost_filesystem-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_filesystem.dylib;
-    install_name_tool -change "libboost_system.dylib" "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
+    install_name_tool -change "libboost_system.dylib" "@executable_path/../Libraries/libboost_system.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
 fi
 if [ -f "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.a" ] ; then
     ln -sfn libboost_system-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_system.a;
@@ -214,3 +273,4 @@ if [ -f "$REPOSITORYDIR/lib/libboost_signals-$BOOST_VER.dylib" ]; then
     install_name_tool -id "$REPOSITORYDIR/lib/libboost_signals-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_signals-$BOOST_VER.dylib";
     ln -sfn libboost_signals-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_signals.dylib;
 fi
+

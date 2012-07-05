@@ -1,19 +1,19 @@
 # ------------------
-#     libiconv
+#      gnumake
 # ------------------
-# $Id: libiconv.sh 1902 2008-01-02 22:27:47Z Harry $
+# $Id:  $
 # Copyright (c) 2007, Ippei Ukai
-# script skeleton Copyright (c) 2007, Ippei Ukai
-# iconv specifics 2010, Harry van der Wolf
+
+# prepare
+source ../scripts/functions.sh
+check_SetEnv
 
 # -------------------------------
-# 20100117.0 HvdW Script tested
+# 20091206.0 sg Script tested and used to build 2009.4.0-RC3
 # 20100624.0 hvdw More robust error checking on compilation
 # -------------------------------
 
 # init
-source ../scripts/functions.sh
-check_SetEnv
 
 fail()
 {
@@ -22,23 +22,21 @@ fail()
 }
 
 let NUMARCH="0"
-
-for i in $ARCHS
-do
-    NUMARCH=$(($NUMARCH + 1))
-done
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
-ICONVVER="2"
-CHARSETVER="1"
+#patch
+make install_source
+#cd ./make
 
 # compile
 
+# remove 64-bit archs from ARCHS
+#remove_64bits_from_ARCH
+
 for ARCH in $ARCHS
-do
+do    
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
@@ -60,20 +58,13 @@ do
 	OSVERSION="$ppcOSVERSION"
 	CC=$ppcCC
 	CXX=$ppcCXX
-    elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-	TARGET=$ppc64TARGET
-	MACSDKDIR=$ppc64MACSDKDIR
-	ARCHARGs="$ppc64ONLYARG"
-	OSVERSION="$ppc64OSVERSION"
-	CC=$ppc64CC
-	CXX=$ppc64CXX
     elif [ $ARCH = "x86_64" ] ; then
-	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
+        TARGET=$x64TARGET
+        MACSDKDIR=$x64MACSDKDIR
+        ARCHARGs="$x64ONLYARG"
+        OSVERSION="$x64OSVERSION"
+        CC=$x64CC
+        CXX=$x64CXX
     fi
     
     env \
@@ -81,25 +72,19 @@ do
 	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
 	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
 	CPPFLAGS="-I$REPOSITORYDIR/include" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
+	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
 	NEXT_ROOT="$MACSDKDIR" \
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
-	--disable-nls --enable-extra-encodings \
-	--without-libiconv-prefix --without-libintl-prefix \
-	--enable-static --enable-shared  || fail "configure step of $ARCH";
+	--with-libiconv-prefix=$REPOSITORYDIR --with-libintl-prefix=$REPOSITORYDIR \
+	--program-transform-name='s/^make$/gnumake/' || fail "configure step for $ARCH";
     
-    make clean
-    make || fail "failed at make step of $ARCH"
-    make $OTHERMAKEARGs install || fail "make install step of $ARCH"
+    make clean;
+    make || fail "failed at make step of $ARCH";
+    make install || fail "make install step of $ARCH";
 done
 
-# merge libiconv
-merge_libraries lib/libiconv.a "lib/libiconv.$ICONVVER.dylib" "lib/libcharset.a" "lib/libcharset.$CHARSETVER.dylib"
-
-change_library_id libiconv.$ICONVVER.dylib libiconv.dylib
-change_library_id libcharset.$CHARSETVER.dylib libcharset.dylib
-
 # merge execs
-merge_execs "bin/iconv"
+merge_execs bin/gnumake
 
+cd ../

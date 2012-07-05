@@ -38,7 +38,7 @@ let NUMARCH="0"
 
 for i in $ARCHS
 do
-  NUMARCH=$(($NUMARCH + 1))
+    NUMARCH=$(($NUMARCH + 1))
 done
 
 mkdir -p "$REPOSITORYDIR/bin";
@@ -50,62 +50,43 @@ mkdir -p "$REPOSITORYDIR/include";
 
 for ARCH in $ARCHS
 do
+    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
+    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
+    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+    
+    ARCHARGs=""
+    MACSDKDIR=""
+    
+    if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
+	TARGET=$i386TARGET
+	MACSDKDIR=$i386MACSDKDIR
+	ARCHARGs="$i386ONLYARG"
+	OSVERSION="$i386OSVERSION"
+	CC=$i386CC
+	CXX=$i386CXX
+    elif [ $ARCH = "x86_64" ] ; then
+	TARGET=$x64TARGET
+	MACSDKDIR=$x64MACSDKDIR
+	ARCHARGs="$x64ONLYARG"
+	OSVERSION="$x64OSVERSION"
+	CC=$x64CC
+	CXX=$x64CXX
+    fi
 
- mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
- mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
- mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
-
- ARCHARGs=""
- MACSDKDIR=""
-
- if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
-   TARGET=$i386TARGET
-   MACSDKDIR=$i386MACSDKDIR
-   ARCHARGs="$i386ONLYARG"
-   OSVERSION="$i386OSVERSION"
-   CC=$i386CC
-   CXX=$i386CXX
- elif [ $ARCH = "ppc" -o $ARCH = "ppc.$VERSION." -o $ARCH = "ppc7400" ] ; then
-   TARGET=$ppcTARGET
-   MACSDKDIR=$ppcMACSDKDIR
-   ARCHARGs="$ppcONLYARG"
-   OSVERSION="$ppcOSVERSION"
-   CC=$ppcCC
-   CXX=$ppcCXX
- elif [ $ARCH = "ppc64" -o $ARCH = "ppc970" ] ; then
-   TARGET=$ppc64TARGET
-   MACSDKDIR=$ppc64MACSDKDIR
-   ARCHARGs="$ppc64ONLYARG"
-   OSVERSION="$ppc64OSVERSION"
-   CC=$ppc64CC
-   CXX=$ppc64CXX
- elif [ $ARCH = "x86_64" ] ; then
-   TARGET=$x64TARGET
-   MACSDKDIR=$x64MACSDKDIR
-   ARCHARGs="$x64ONLYARG"
-   OSVERSION="$x64OSVERSION"
-   CC=$x64CC
-   CXX=$x64CXX
- fi
-
-
-
-
-
- env \
-  CC=$CC CXX=$CXX \
-  CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
-  CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
-  CPPFLAGS="-I$REPOSITORYDIR/include" \
-  LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -lresolv -bind_at_load" \
-  NEXT_ROOT="$MACSDKDIR" \
-  ./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-  --host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
-  --enable-static --enable-shared  || fail "configure step of $ARCH";
-
- make clean
- make || fail "failed at make step of $ARCH"
- make $OTHERMAKEARGs install || fail "make install step of $ARCH"
+    env \
+	CC=$CC CXX=$CXX \
+	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
+	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
+	CPPFLAGS="-I$REPOSITORYDIR/include" \
+	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -lresolv -bind_at_load" \
+	NEXT_ROOT="$MACSDKDIR" \
+	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
+	--enable-static --enable-shared  || fail "configure step of $ARCH";
+    echo "## make ##"
+    make clean
+    make || fail "failed at make step of $ARCH"
+    make $OTHERMAKEARGs install || fail "make install step of $ARCH"
 done
 
 
@@ -113,9 +94,9 @@ done
 
 for liba in lib/libffi.a lib/libffi.$VERSION.dylib 
 do
-
- if [ $NUMARCH -eq 1 ] ; then
-   if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
+    
+    if [ $NUMARCH -eq 1 ] ; then
+	if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
 		 echo "Moving arch/$ARCHS/$liba to $liba"
   	 mv "$REPOSITORYDIR/arch/$ARCHS/$liba" "$REPOSITORYDIR/$liba";
 	   #Power programming: if filename ends in "a" then ...

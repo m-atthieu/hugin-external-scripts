@@ -17,13 +17,6 @@ check_SetEnv
 # 20100831.0 hvdw upgrade to 1.2.44
 # -------------------------------
 
-#libraries created:
-# libpng.3.1.2.42 <- (libpng.3, libpng)
-# libpng12.12.1.2.42 <- (libpng12.12, libpng12)
-# libpng12.a <- libpng.a
-PNGVER_M="14"
-PNGVER_FULL="$PNGVER_M.14"
-
 # init
 
 fail()
@@ -32,6 +25,19 @@ fail()
         exit 1
 }
 
+#libraries created:
+# libpng.3.1.2.42 <- (libpng.3, libpng)
+# libpng12.12.1.2.42 <- (libpng12.12, libpng12)
+# libpng12.a <- libpng.a
+case "$(basename $(pwd))" in
+    'libpng-1.4.11')
+	PNGVER_M="14"
+	PNGVER_FULL="$PNGVER_M.14"
+	;;
+    *) 
+	fail "Unknown version"
+	;;
+esac
 
 let NUMARCH="0"
 for i in $ARCHS ; do
@@ -60,6 +66,7 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
+	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
@@ -67,6 +74,7 @@ do
 	OSVERSION="$x64OSVERSION"
 	CC=$x64CC
 	CXX=$x64CXX
+	ARCHFLAG="-m64"
     fi
     
     # makefile.darwin
@@ -80,10 +88,10 @@ do
 	ZLIBLIB="$MACSDKDIR/usr/lib" \
 	ZLIBINC="$MACSDKDIR/usr/include" \
 	CC="$CC" CXX="$CXX" \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
 	OBJCFLAGS="-arch $ARCH" \
 	OBJCXXFLAGS="-arch $ARCH" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -L. -L$ZLIBLIB -lpng$PNGVER_M -lz -mmacosx-version-min=$OSVERSION" \
+	LDFLAGS="-L$REPOSITORYDIR/lib -L. -L$ZLIBLIB -lz -mmacosx-version-min=$OSVERSION" \
 	NEXT_ROOT="$MACSDKDIR" \
 	LIBPATH="$REPOSITORYDIR/arch/$ARCH/lib" \
 	BINPATH="$REPOSITORYDIR/arch/$ARCH/bin" \
@@ -92,33 +100,25 @@ do
 
     # This libpng.dylib is installed as libpng15.15..dylib, so we have to rename them
     # I assume this will be corrected in 1.5.11 or so
-    mv -v $REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL..dylib $REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL.dylib
+    mv -v $REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL..dylib \
+	$REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL.dylib \
+	|| fail "failed moving $REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL..dylib"
 done
 
 # merge libpng
-merge_libraries "lib/libpng$PNGVER_M.a" "lib/libpng$PNGVER_M.$PNGVER_FULL.dylib" "lib/libpng.3.$PNGVER.dylib"
+merge_libraries "lib/libpng$PNGVER_M.a" "lib/libpng$PNGVER_FULL.dylib"
 
 if [ -f "$REPOSITORYDIR/lib/libpng$PNGVER_M.a" ] ; then
   ln -sfn libpng$PNGVER_M.a $REPOSITORYDIR/lib/libpng.a;
 fi
-if [ -f "$REPOSITORYDIR/lib/libpng$PNGVER_M.$PNGVER_FULL.dylib" ] ; then
- install_name_tool -id "$REPOSITORYDIR/lib/libpng$PNGVER_M.$PNGVER_FULL.dylib" "$REPOSITORYDIR/lib/libpng$PNGVER_M.$PNGVER_FULL.dylib"
- ln -sfn libpng$PNGVER_M.$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng$PNGVER_M.$PNGVER_M.dylib;
- ln -sfn libpng$PNGVER_M.$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng$PNGVER_M.dylib;
-fi
-if [ -f "$REPOSITORYDIR/lib/libpng.$PNGVER_FULL.dylib" ] ; then
- install_name_tool -id "$REPOSITORYDIR/lib/libpng.$PNGVER_FULL.dylib" "$REPOSITORYDIR/lib/libpng.$PNGVER_FULL.dylib"
- ln -sfn libpng.$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng.$PNGVER_M.dylib;
- ln -sfn libpng.$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng.dylib;
-fi
-if [ -f "$REPOSITORYDIR/lib/libpng.3.$PNGVER.dylib" ] ; then
- install_name_tool -id "$REPOSITORYDIR/lib/libpng.3.dylib" "$REPOSITORYDIR/lib/libpng.3.$PNGVER.dylib"
- ln -sfn libpng.3.$PNGVER.dylib $REPOSITORYDIR/lib/libpng.3.dylib;
- ln -sfn libpng.3.dylib $REPOSITORYDIR/lib/libpng.dylib;
+
+if [ -f "$REPOSITORYDIR/lib/libpng$PNGVER_FULL.dylib" ] ; then
+    install_name_tool -id "$REPOSITORYDIR/lib/libpng$PNGVER_FULL.dylib" "$REPOSITORYDIR/lib/libpng$PNGVER_FULL.dylib"
+    ln -sfn libpng$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng$PNGVER_M.dylib;
+    ln -sfn libpng$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng.dylib;
 fi
 
 #pkgconfig
-
 for ARCH in $ARCHS
 do
     mkdir -p $REPOSITORYDIR/lib/pkgconfig
