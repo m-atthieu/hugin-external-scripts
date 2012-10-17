@@ -30,7 +30,7 @@ os_dotvsn=${uname_release%%.*}
 os_dotvsn=$(($os_dotvsn - 4))
 case $os_dotvsn in
     4 ) os_sdkvsn="10.4u" ;;
-    5|6|7 ) os_sdkvsn=10.$os_dotvsn ;;
+    5|6|7|8 ) os_sdkvsn=10.$os_dotvsn ;;
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
@@ -141,7 +141,7 @@ do
 	10.5 | 10.6)
 	    dylib_name="dylib1.10.5.o"
 	    ;;
-	10.7)
+	10.7 | 10.8)
 	    dylib_name="dylib1.10.5.o"
 	    ;;
 	* )
