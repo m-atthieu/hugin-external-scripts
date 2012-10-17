@@ -1,21 +1,12 @@
 # ------------------
-# enblend 4.0   
+# enblend-openmp 4.0   
 # ------------------
 # $Id: enblend3.sh 1908 2007-02-05 14:59:45Z ippei $
 # Copyright (c) 2007, Ippei Ukai
 
 # prepare
-
-# export REPOSITORYDIR="/PATH2HUGIN/mac/ExternalPrograms/repository" \
-# ARCHS="ppc i386" \
-#  ppcTARGET="powerpc-apple-darwin7" \
-#  i386TARGET="i386-apple-darwin8" \
-#  ppcMACSDKDIR="/Developer/SDKs/MacOSX10.3.9.sdk" \
-#  i386MACSDKDIR="/Developer/SDKs/MacOSX10.4u.sdk" \
-#  ppcONLYARG="-mcpu=G3 -mtune=G4" \
-#  i386ONLYARG="-mfpmath=sse -msse2 -mtune=pentium-m -ftree-vectorize" \
-#  ppc64ONLYARG="-mcpu=G5 -mtune=G5 -ftree-vectorize" \
-#  OTHERARGs="";
+source ../scripts/functions.sh
+check_SetEnv
 
 # -------------------------------
 # 20091206.0 sg Script tested and used to build 2009.4.0-RC3
@@ -27,6 +18,11 @@
 # -------------------------------
 
 # init
+fail()
+{
+    echo "** Failed at $1 **"
+    exit 1
+}
 
 # Fancy doc builds on Enblend 3.2 are doomed to failure, so don't even try...
 AC_INIT=$(grep AC_INIT Configure.in)
@@ -73,15 +69,21 @@ do
 	MACSDKDIR=$i386MACSDKDIR
 	ARCHARGs="$i386ONLYARG"
 	OSVERSION="$i386OSVERSION"
-	CC=$i386CC
-	CXX=$i386CXX
+	CC=gcc-4.7 # i386CC
+	CXX=g++-4.7 # i386CXX
+	CPP=cpp-4.7
+	CXXCPP=cpp-4.7
+	MARCH=-m32
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
+	CC=gcc-4.7 # $x64CC
+	CXX=g++-4.7 # $x64CXX
+	CPP=cpp-4.7
+	CXXCPP=cpp-4.7
+	MARCH=-m64
     fi
     
     # To build documentation, you will need to install the following (port) packages:
@@ -101,38 +103,51 @@ do
     # export PATH=/usr/local/texlive/2009/bin/universal-darwin:$PATH
     # To make the change permanent, edit ~/.profile.
 
+    mkdir -p build-$ARCH
+    cd build-$ARCH
+    rm -f CMakeCache.txt
+
+    #env \
+	#CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
+       #CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
+	#CXXFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
+	#CPPFLAGS="-fopenmp -I$REPOSITORYDIR/include -I$REPOSITORYDIR/include/OpenEXR -I/usr/include" \
+	#LIBS="-lGLEW -framework GLUT -lobjc -framework OpenGL -framework AGL" \
+	#LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
+	#NEXT_ROOT="$MACSDKDIR" \
+	#PKG_CONFIG_PATH="$REPOSITORYDIR/lib/pkgconfig" \
+	#./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+	#--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH --with-apple-opengl-framework \
+	#--disable-image-cache --enable-openmp=yes \
+	#--with-glew $extraConfig --with-openexr || fail "configure step for $ARCH"
     env \
-	CC=$CC CXX=$CXX \
-	CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include -arch $ARCH $ARCHARGs $OTHERARGs -dead_strip" \
-	CXXFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include -arch $ARCH $ARCHARGs $OTHERARGs -dead_strip" \
-	CPPFLAGS="-fopenmp -I$REPOSITORYDIR/include -I$REPOSITORYDIR/include/OpenEXR -I/usr/include" \
-	LIBS="-lGLEW -framework GLUT -lobjc -framework OpenGL -framework AGL" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
-	NEXT_ROOT="$MACSDKDIR" \
-	PKG_CONFIG_PATH="$REPOSITORYDIR/lib/pkgconfig" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH --with-apple-opengl-framework \
-	--disable-image-cache --enable-openmp=yes --disable-gpu-support \
-	--with-glew $extraConfig --with-openexr || fail "configure step for $ARCH"
+	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
+	cmake \
+        -DCMAKE_VERBOSE_MAKEFILE:BOOL="ON" \
+        -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR/arch/$ARCH" \
+        -DCMAKE_BUILD_TYPE:STRING="Release" \
+        -DCMAKE_C_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
+        -DCMAKE_CXX_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
+        -DJPEG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+        -DJPEG_LIBRARIES="$REPOSITORYDIR/lib/libjpeg.dylib" \
+        -DPNG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+        -DPNG_LIBRARIES="$REPOSITORYDIR/lib/libpng.dylib" \
+        -DTIFF_INCLUDE_DIR="$REPOSITORYDIR/include" \
+        -DTIFF_LIBRARIES="$REPOSITORYDIR/lib/libtiff.dylib" \
+        -DZLIB_INCLUDE_DIR="/usr/include" \
+        -DZLIB_LIBRARIES="/usr/lib/libz.dylib" \
+	-DVIGRA_INCLUDE_DIR="$REPOSITORYDIR/include" \
+	-DVIGRA_LIBRARIES="$REPOSITORYDIR/lib/libvigraimpex.dylib" \
+	-DENABLE_OPENMP:BOOL="ON" \
+	-DENABLE_IMAGECACHE:BOOL="OFF" \
+	-DENABLE_GPU:BOOL="OFF" \
+        .. || fail "configuring for $ARCH"
     
-    # hack; AC_FUNC_MALLOC sucks!!
-    # mv ./config.h ./config.h-copy; 
-    # sed -e 's/HAVE_MALLOC\ 0/HAVE_MALLOC\ 1/' \
-    #     -e 's/rpl_malloc/malloc/' \
-    #     "./config.h-copy" > "./config.h";
-
-    # Default to standard -O3 optimization as this improves performance
-    # and shrinks the binary
-    # If you prefer -O2, change -O3 to -O2 in the 3rd line (containing the sed command).
-    [ -f src/Makefile.bak ] && rm src/Makefile.bak
-    mv src/Makefile src/Makefile.bak
-    sed -e "s/-O[0-9]/-O3/g" "src/Makefile.bak" > src/Makefile
-    
-    make clean;
-    make all $extraBuild ;
-    make install $extraInstall ;
+    make clean || fail "make clean for $ARCH";
+    make all $extraBuild || fail "make all for $ARCH"
+    make install $extraInstall || fail "make install for $ARCH";
+    cd ..
 done
-
 
 # merge execs
 for program in bin/enblend bin/enfuse
