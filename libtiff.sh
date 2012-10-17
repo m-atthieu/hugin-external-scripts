@@ -110,7 +110,7 @@ do
     esac
     
     [ -f $REPOSITORYDIR/$crt1obj ] || cp $NATIVE_SDK/usr/$crt1obj $REPOSITORYDIR/$crt1obj ;
- # File exists for 10.5 and 10.6. 10.4 is now fixed
+    # File exists for 10.5 and 10.6. 10.4 is now fixed
     [ -f $REPOSITORYDIR/$crt1obj ] || exit 1 ;
     
     env \
