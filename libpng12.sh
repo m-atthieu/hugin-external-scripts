@@ -21,9 +21,21 @@ check_SetEnv
 # libpng.3.1.2.42 <- (libpng.3, libpng)
 # libpng12.12.1.2.42 <- (libpng12.12, libpng12)
 # libpng12.a <- libpng.a
-PNGVER_M="12"
-PNGVER="1.2.44"
-PNGVER_FULL="$PNGVER_M.1.2.44"
+case "$(basename $(pwd))" in
+    'libpng-1.2.44')
+        PNGVER_M="12"
+        PNGVER="1.2.44"
+        PNGVER_FULL="$PNGVER_M.1.2.44"
+        ;;
+    'libpng-1.2.46')
+        PNGVER_M="12"
+        PNGVER="1.2.46"
+        PNGVER_FULL="$PNGVER_M.1.2.46"
+        ;;
+    *) 
+        fail "Unknown version"
+        ;;
+esac
 
 # init
 
