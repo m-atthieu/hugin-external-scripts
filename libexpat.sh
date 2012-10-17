@@ -27,12 +27,12 @@ os_dotvsn=${uname_release%%.*}
 os_dotvsn=$(($os_dotvsn - 4))
 case $os_dotvsn in
     4 ) os_sdkvsn="10.4u" ;;
-    5|6|7 ) os_sdkvsn=10.$os_dotvsn ;;
+    5|6|7|8 ) os_sdkvsn=10.$os_dotvsn ;;
     * ) echo "Unhandled OS Version: 10.$os_dotvsn . Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
-if [ $os_dotvsn -eq 7 ]; then
+NATIVE_SDKDIR="$(xcode-select -print-path)"/Platforms/MacOSX.platform/Developer/SDKs/MacOSX"$os_sdkvsn".sdk
+if [ $os_dotvsn -eq 7 -o $os_dotvsn -eq 8 ]; then
 	NATIVE_OSVERSION="10.6"
 else
 	NATIVE_OSVERSION="10.$os_dotvsn"
@@ -106,7 +106,7 @@ do
 	 10.4 )
    	    crt1obj="lib/crt1.o"
 	    ;;
-	10.5 | 10.6 | 10.7 )
+	10.5 | 10.6 | 10.7 | 10.8 )
 	    crt1obj="lib/crt1.$NATIVE_OSVERSION.o"
 	    ;;
 	* )
@@ -116,7 +116,7 @@ do
     esac
     
     [ -f $REPOSITORYDIR/$crt1obj ] || cp $NATIVE_SDK/usr/$crt1obj $REPOSITORYDIR/$crt1obj ;
- # File exists for 10.5 and 10.6. 10.4 is now fixed
+    # File exists for 10.5 and 10.6. 10.4 is now fixed
     [ -f $REPOSITORYDIR/$crt1obj ] || exit 1 ;
     
     env \
@@ -126,7 +126,7 @@ do
 	CPPFLAGS="-I$REPOSITORYDIR/include" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
 	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+	./configure --prefix="$REPOSITORYDIR"  \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--enable-shared || fail "configure step for $ARCH";
     
