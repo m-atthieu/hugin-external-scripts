@@ -81,7 +81,7 @@ do
     
     echo "## Now compiling $ARCH version ##\n"
     env \
-	PATH=$PATH \
+	PATH="$PATH" \
 	CC=$CC CXX=$CXX \
 	CFLAGS="-isysroot $MACSDKDIR -I. -I$REPOSITORYDIR/include -O2 $ARCHFLAG $ARCHARGs $OTHERARGs -dead_strip" \
 	CXXFLAGS="-isysroot $MACSDKDIR -I. -I$REPOSITORYDIR/include -O2 $ARCHFLAG $ARCHARGs $OTHERARGs -dead_strip" \
@@ -89,7 +89,7 @@ do
 	LDFLAGS="-ltiff -ljpeg -L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip $ARCHFLAG" \
 	NEXT_ROOT="$MACSDKDIR" \
 	$CXX -L$REPOSITORYDIR/lib/ -O2 -I$REPOSITORYDIR/include/ -I$MACSDKDIR/usr/include -isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs \
-	-ltiff -ljpeg multiblend.cpp -o multiblend || fail "compile step for $ARCH";
+	-ltiff -ljpeg -lpng multiblend.cpp -o multiblend || fail "compile step for $ARCH";
     
     mv multiblend $REPOSITORYDIR/arch/$ARCH/bin 
 done

@@ -21,7 +21,7 @@ fail()
     exit 1
 }
 
-ORGPATH=$PATH
+ORGPATH="$PATH"
 
 VERSION="2.0"
 FULLVERSION="2.0.0"
@@ -55,7 +55,7 @@ do
 	MACSDKDIR=$i386MACSDKDIR
         # ARCHARGs="$i386ONLYARG"
         # glib2 not yet fully compliant with openmp on 32bits
-	ARCHARGs="-march=prescott -mtune=pentium-m -ftree-vectorize -mmacosx-version-min=10.5"
+	ARCHARGs="-march=prescott -mtune=pentium-m -ftree-vectorize -mmacosx-version-min=10.7"
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
@@ -72,7 +72,7 @@ do
     fi
     
     env \
-	PATH=$myPATH \
+	PATH="$myPATH" \
 	CC=$CC CXX=$CXX \
 	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
 	CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
@@ -93,7 +93,6 @@ do
 done
 
 # merge libglib2
-
 for liba in lib/libglib-$VERSION.a lib/libglib-$FULLVERSION.dylib lib/libgmodule-$VERSION.a lib/libgmodule-$FULLVERSION.dylib lib/libgthread-$VERSION.a lib/libgthread-$FULLVERSION.dylib lib/libgobject-$VERSION.a lib/libgobject-$FULLVERSION.dylib lib/libgio-$VERSION.a lib/libgio-$FULLVERSION.dylib
 do
     if [ $NUMARCH -eq 1 ] ; then
@@ -133,7 +132,7 @@ do
     
     
     lipo $LIPOARGs -create -output "$REPOSITORYDIR/$liba";
- #Power programming: if filename ends in "a" then ...
+    #Power programming: if filename ends in "a" then ...
     [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
     
 done

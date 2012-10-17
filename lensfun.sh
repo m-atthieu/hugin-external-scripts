@@ -22,7 +22,7 @@ fail()
         exit 1
 }
 
-ORGPATH=$PATH
+ORGPATH="$PATH"
 
 #patch -Np0 < ../scripts/lensfun-patch-pkgconfig.diff
 
@@ -54,7 +54,7 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
-	myPATH=$ORGPATH
+	myPATH="$ORGPATH"
 	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
@@ -69,7 +69,7 @@ do
 
     make clean;
     env \
-	PATH=$myPATH \
+	PATH="$myPATH" \
 	CC=$CC CXX=$CXX \
 	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -I$REPOSITORYDIR/include/glib-2.0 -I$REPOSITORYDIR/include/gio-unix-2.0 \
          -I$REPOSITORYDIR/arch/$ARCH/lib/glib-2.0/include -I$REPOSITORYDIR/arch/$ARCH/lib/gio/include -I$REPOSITORYDIR/include" \
