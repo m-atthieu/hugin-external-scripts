@@ -28,7 +28,7 @@ mkdir -p "$REPOSITORYDIR/include";
 
 #patch
 make install_source
-#cd ./make
+cd ./make
 
 # compile
 
