@@ -46,6 +46,9 @@ case "$(basename $(pwd))" in
     "boost_1_50_0")
 	BOOST_VER="1_50"
 	;;
+    "boost_1_51_0")
+	BOOST_VER="1_51"
+	;;
     *)
 	echo "Unknown boost version. Aborting"
 	exit 1
@@ -79,7 +82,7 @@ case "$BOOST_VER" in
 	 BJAM=$(ls ./tools/build/v2/engine/src/bin.mac*/bjam)
 	 echo $BJAM
 	 ;;
-    1_47|1_48|1_49|1_50)
+    1_47|1_48|1_49|1_50|1_51)
 	perl -p -i -e 's/-no-cpp-precomp//' tools/build/v2/tools/darwin.jam
 	 cd "./tools/build/v2/engine"
 	 sh "build.sh"
