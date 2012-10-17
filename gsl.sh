@@ -156,7 +156,6 @@ then
 fi
 
 # merge execs
-
 for program in bin/gsl-randist bin/gsl-histogram
 do
 
@@ -200,7 +199,9 @@ do
   install_name_tool -change $REPOSITORYDIR/arch/$ARCH/lib/libgsl.$GSLVER.dylib $REPOSITORYDIR/lib/libgslcblas.$GSLVER.dylib $REPOSITORYDIR/bin/gsl-randist
 done
 
-
+# gsl-config
+sed 's,/arch/x86_64,,g' < gsl-config > $REPOSITORYDIR/bin/gsl-config
+chmod +x $REPOSITORYDIR/bin/gsl-config
 
 ##pkgconfig
 #for ARCH in $ARCHS
