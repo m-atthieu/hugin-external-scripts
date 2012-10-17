@@ -48,13 +48,21 @@ build libxmi    libxmi-1.2      libxmi.sh
 build libglew   glew-1.5.8      libglew-1.5.8.sh
 build gnumake   gnumake-126.2   gnumake-126.2.sh
 build wxmac     wxMac-2.8.12    wxmac28.sh
+
+build gsl		gsl-1.15		gsl.sh # enblend.hg dependnecy
 # Correct funky name for the enblend-enfuse-4.0 directory
 if [ ! -d ../enblend-enfuse-4.0 ] && [ -d ../enblend-enfuse-4.0-753b534c819d ] ; then
     ln -s enblend-enfuse-4.0-753b534c819d ../enblend-enfuse-4.0
 fi
 build enblend-enfuse enblend-enfuse-4.0 enblend.sh
+
 build tclap          tclap-1.2.1        tclap.sh
 build zthread        ZThread-2.3.2      zthread.sh
+
+build glib2   glib-2.28.8   libglib2.sh
+build lensfun lensfun-0.2.6 lensfun.sh
+
+build multiblend multiblend-0.4 multiblend.sh
 
 # Following packages are optional. Uncomment if you are building them
 #echo "$pre autopano-sift-C $pst" && cd ../autopano-sift-C    && sh ../scripts/autopano-sift-C.sh;
