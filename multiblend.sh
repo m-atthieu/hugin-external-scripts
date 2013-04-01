@@ -64,8 +64,8 @@ do
         # multiblend not yet fully compliant with openmp on 32bits
 	ARCHARGs="-march=prescott -mtune=pentium-m -ftree-vectorize -mmacosx-version-min=$i386OSVERSION"
 	OSVERSION="$i386OSVERSION"
-	CC=$i386CC
-	CXX=$i386CXX
+	CC=$i386CC_MP
+	CXX=$i386CXX_MP
    #myPATH=$ORGPATH
 	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
@@ -73,13 +73,14 @@ do
 	MACSDKDIR=$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
+	CC=$x64CC_MP
+	CXX=$x64CXX_MP
 	ARCHFLAG="-m64"
    #myPATH=/usr/local/bin:$PATH
     fi
     
     echo "## Now compiling $ARCH version ##\n"
+    set -x
     env \
 	PATH="$PATH" \
 	CC=$CC CXX=$CXX \
@@ -89,9 +90,10 @@ do
 	LDFLAGS="-ltiff -ljpeg -L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip $ARCHFLAG" \
 	NEXT_ROOT="$MACSDKDIR" \
 	$CXX -L$REPOSITORYDIR/lib/ -O2 -I$REPOSITORYDIR/include/ -I$MACSDKDIR/usr/include -isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs \
-	-ltiff -ljpeg -lpng multiblend.cpp -o multiblend || fail "compile step for $ARCH";
+	-fopenmp -ltiff -ljpeg -lpng multiblend.cpp -o multiblend || fail "compile step for $ARCH";
     
     mv multiblend $REPOSITORYDIR/arch/$ARCH/bin 
+    set +x
 done
 
 

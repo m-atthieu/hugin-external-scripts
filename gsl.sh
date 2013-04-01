@@ -211,3 +211,5 @@ chmod +x $REPOSITORYDIR/bin/gsl-config
 # break;
 #done
 
+# clean
+make distclean 1> /dev/null

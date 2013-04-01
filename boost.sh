@@ -49,6 +49,9 @@ case "$(basename $(pwd))" in
     "boost_1_51_0")
 	BOOST_VER="1_51"
 	;;
+    "boost_1_53_0")
+	BOOST_VER="1_53"
+	;;
     *)
 	echo "Unknown boost version. Aborting"
 	exit 1
@@ -82,7 +85,7 @@ case "$BOOST_VER" in
 	 BJAM=$(ls ./tools/build/v2/engine/src/bin.mac*/bjam)
 	 echo $BJAM
 	 ;;
-    1_47|1_48|1_49|1_50|1_51)
+    1_47|1_48|1_49|1_50|1_51|1_53)
 	perl -p -i -e 's/-no-cpp-precomp//' tools/build/v2/tools/darwin.jam
 	 cd "./tools/build/v2/engine"
 	 sh "build.sh"
@@ -118,8 +121,7 @@ do
     rm -rf "stage-$ARCH";
     mkdir -p "stage-$ARCH";
     
-    if [ $ARCH = "i386" -o $ARCH = "i686" ]
-    then
+    if [ $ARCH = "i386" -o $ARCH = "i686" ]; then
 	MACSDKDIR=$i386MACSDKDIR
 	OSVERSION=$i386OSVERSION
 	OPTIMIZE=$i386OPTIMIZE
@@ -130,8 +132,7 @@ do
 	export ARCHTARGET=$i386TARGET;
 	myPATH=$ORGPATH
 	ARCHFLAG="-m32"
-    elif [ $ARCH = "x86_64" ]
-    then
+    elif [ $ARCH = "x86_64" ]; then
 	MACSDKDIR=$x64MACSDKDIR
 	OSVERSION=$x64OSVERSION
 	OPTIMIZE=$x64OPTIMIZE
@@ -141,7 +142,7 @@ do
 	export CXX=$x64CXX;
 	export ARCHTARGET=$x86_64TARGET;
 	ARCHFLAG="-m64"
-	myPATH=/usr/local/bin:$PATH
+	#myPATH=/usr/local/bin:$PATH
     fi
     
     # env $myPATH
@@ -156,6 +157,8 @@ do
 	#macosx-version : -isysroot $(sdk)
 	#macosx-version-min : -mmacosx-version-min=$(version)
 	if [ "$CXX" = "g++-4.7" ]; then
+	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
+	elif [ "$CXX" = "g++-4.6" ]; then
 	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
 	elif [ "$CXX" = "llvm-g++-4.2" ]; then
 	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
@@ -242,6 +245,7 @@ fi
 if [ -f "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" ]; then
     install_name_tool -id "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
     ln -sfn libboost_filesystem-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_filesystem.dylib;
+	# why ?
     install_name_tool -change "libboost_system.dylib" "@executable_path/../Libraries/libboost_system.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
 fi
 if [ -f "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.a" ] ; then
@@ -277,3 +281,6 @@ if [ -f "$REPOSITORYDIR/lib/libboost_signals-$BOOST_VER.dylib" ]; then
     ln -sfn libboost_signals-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_signals.dylib;
 fi
 
+
+# clean
+rm -rf stage-i386 stage-x86_64

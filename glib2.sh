@@ -26,7 +26,7 @@ ORGPATH="$PATH"
 VERSION="2.0"
 FULLVERSION="2.0.0"
 
-patch -Np0 < ../scripts/patches/glib-2.32-gcc-4.7.patch
+#patch -Np0 < ../scripts/patches/glib-2.32-gcc-4.7.patch
 
 let NUMARCH="0"
 
@@ -49,47 +49,52 @@ do
     
     ARCHARGs=""
     MACSDKDIR=""
+
+    #mkdir -p build-$ARCH
+    #cd build-$ARCH
     
     if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
 	TARGET=$i386TARGET
 	MACSDKDIR=$i386MACSDKDIR
         # ARCHARGs="$i386ONLYARG"
         # glib2 not yet fully compliant with openmp on 32bits
-	ARCHARGs="-march=prescott -mtune=pentium-m -ftree-vectorize -mmacosx-version-min=10.7"
+	ARCHARGs="-march=prescott -mtune=pentium-m -ftree-vectorize -mmacosx-version-min=$i386OSVERSION"
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
-	myPATH=$ORGPATH
+	#myPATH=$ORGPATH
 	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
+	#myPATH=$ORGPATH
 	CC=$x64CC
 	CXX=$x64CXX
 	ARCHFLAG="-m64"
     fi
     
     env \
-	PATH="$myPATH" \
 	CC=$CC CXX=$CXX \
 	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
 	CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
 	CPPFLAGS="-I$REPOSITORYDIR/include" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -L$MACSDKDIR/usr/lib -dead_strip -lresolv -bind_at_load $ARCHFLAG" \
 	NEXT_ROOT="$MACSDKDIR" \
-	ZLIB_CFLAGS="-I$MACSDKDIR/usr/include" ZLIB_LIBS="-L$MACSDKDIR/usr/lib" \
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
+	ZLIB_CFLAGS="-I$MACSDKDIR/usr/include" ZLIB_LIBS="-L$MACSDKDIR/usr/lib" \
+	GETTEXT_CFLAGS="-I$REPOSITORYDIR/include" GETTEXT_LIBS="-L$REPOSITORYDIR/lib" \
 	--disable-selinux --disable-fam --disable-xattr \
 	--disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf \
 	--disable-man --disable-dtrace --disable-systemtap \
-	--enable-static --enable-shared --with-libiconv=gnu || fail "configure step of $ARCH"
+	--enable-static --enable-shared || fail "configure step of $ARCH"
     
     make clean
     make || fail "failed at make step of $ARCH"
     make $OTHERMAKEARGs install || fail "make install step of $ARCH"
+    #cd ..
 done
 
 # merge libglib2
@@ -182,6 +187,27 @@ if [ -f $REPOSITORYDIR/lib/libgio-$FULLVERSION.dylib ] ; then
     echo "install_name_tool id on libgio-$FULLVERSION.dylib plus symlinking";
 fi
 
+# include
+rm -f $REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h
+mkdir -p $REPOSITORYDIR/lib/glib-2.0/include
+echo > $REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h
+for ARCH in $ARCHS; do
+	if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
+	    echo "#if defined(__i386__)"                       >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    echo ""                                            >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    cat "$REPOSITORYDIR/arch/$ARCH/lib/glib-2.0/include/glibconfig.h"      >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    echo ""                                            >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    echo "#endif /* __i386__ */"                                      >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	elif [ $ARCH = "x86_64" ] ; then
+	    echo "#if defined(__x86_64__)"                     >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    echo ""                                            >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    cat "$REPOSITORYDIR/arch/$ARCH/lib/glib-2.0/include/glibconfig.h"      >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    echo ""                                            >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	    echo "#endif /* __x86_64__ */"                                      >> "$REPOSITORYDIR/lib/glib-2.0/include/glibconfig.h";
+	else
+	    echo "Unhandled ARCH: $ARCH. Aborting build."; exit 1
+	fi
+done
 
 #pkgconfig
 echo "Installing pkcconfig file glib-2.0.pc"
@@ -192,3 +218,6 @@ do
     break;
 done
 
+# clean
+#clean_build_directories
+make distclean 1> /dev/null

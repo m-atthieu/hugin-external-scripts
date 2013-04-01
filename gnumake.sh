@@ -87,4 +87,6 @@ done
 # merge execs
 merge_execs bin/gnumake
 
-cd ../
+cd ..
+
+make -C make distclean 1> /dev/null

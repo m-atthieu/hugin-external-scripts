@@ -15,7 +15,7 @@ check_SetEnv
 # 20100624.0 hvdw More robust error checking on compilation
 # -------------------------------
 
-JPEGLIBVER="8"
+
 
 fail()
 {
@@ -23,6 +23,16 @@ fail()
         exit 1
 }
 
+case "$(basename $(pwd))" in
+    'jpeg-8d')
+	JPEGLIBVER="8"
+	;;
+    'jpeg-9')
+	JPEGLIBVER="9"
+	;;
+    *)
+	fail "Unknown version"
+esac
 
 # init
 
@@ -37,7 +47,7 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
@@ -78,6 +88,9 @@ do
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+
+    mkdir -p build-$ARCH
+    cd build-$ARCH
     
     ARCHARGs=""
     MACSDKDIR=""
@@ -119,15 +132,19 @@ do
 	CPPFLAGS="-I$REPOSITORYDIR/include -I/usr/include" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
 	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+	../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--enable-shared --enable-static || fail "configure step for $ARCH";
     
     make clean;
     make || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
+    cd ..
 done
 
 # merge libjpeg
 merge_libraries "lib/libjpeg.a" "lib/libjpeg.$JPEGLIBVER.dylib"
 change_library_id "libjpeg.$JPEGLIBVER.dylib" libjpeg.dylib
+
+# clean
+clean_build_directories

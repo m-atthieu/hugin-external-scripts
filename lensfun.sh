@@ -54,22 +54,20 @@ do
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
-	myPATH="$ORGPATH"
+	#myPATH="$ORGPATH"
 	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
+	CC=$x64CC_MP # OpenMP
+	CXX=$x64CXX_MP # OpenMP
 	ARCHFLAG="-m64"
-	#myPATH=/usr/local/bin:$PATH
     fi
 
     make clean;
     env \
-	PATH="$myPATH" \
 	CC=$CC CXX=$CXX \
 	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -I$REPOSITORYDIR/include/glib-2.0 -I$REPOSITORYDIR/include/gio-unix-2.0 \
          -I$REPOSITORYDIR/arch/$ARCH/lib/glib-2.0/include -I$REPOSITORYDIR/arch/$ARCH/lib/gio/include -I$REPOSITORYDIR/include" \
@@ -133,3 +131,8 @@ do
 
 done
 
+# share
+cp -a $REPOSITORYDIR/arch/i386/share/lensfun $REPOSITORYDIR/share
+
+# clean
+make distclean 1> /dev/null

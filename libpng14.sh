@@ -30,9 +30,13 @@ fail()
 # libpng12.12.1.2.42 <- (libpng12.12, libpng12)
 # libpng12.a <- libpng.a
 case "$(basename $(pwd))" in
-    'libpng-1.4.11')
+    'libpng-1.4.11' | 'libpng-1.4.12')
 	PNGVER_M="14"
 	PNGVER_FULL="$PNGVER_M.14"
+	;;
+    'libpng-1.5.14')
+	PNGVER_M="15"
+	PNGVER_FULL="$PNGVER_M.1"
 	;;
     *) 
 	fail "Unknown version"

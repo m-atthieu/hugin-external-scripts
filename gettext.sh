@@ -40,7 +40,7 @@ mkdir -p "$REPOSITORYDIR/include";
 case "$(basename $(pwd))" in 
     "gettext-0.17")
 	GETTEXTVER_M="0"
-	GEETTEXTVER_FULL="$GETTEXTVER_M.17"
+	GETTEXTVER_FULL="$GETTEXTVER_M.17"
 	MAIN_LIB_VER="0"
 	FULL_LIB_VER="$MAIN_LIB_VER.17"
 	ASPRINTFVER_F="0.0.0"
@@ -52,7 +52,7 @@ case "$(basename $(pwd))" in
 	;;
     "gettext-0.18.1.1")
 	GETTEXTVER_M="0"
-	GEETTEXTVER_FULL="$GETTEXTVER_M.18"
+	GETTEXTVER_FULL="$GETTEXTVER_M.18"
 	MAIN_LIB_VER="0"
 	FULL_LIB_VER="$MAIN_LIB_VER.18.1"
 	ASPRINTFVER_F="0.0.0"
@@ -62,13 +62,27 @@ case "$(basename $(pwd))" in
 	LIBINTLVER_F="8.0.2"
 	LIBINTLVER_M="8"
 	;;
+    "gettext-0.18.2")
+	GETTEXTVER_M="0"
+	GETTEXTVER_FULL="$GETTEXTVER_M.18"
+	MAIN_LIB_VER="0"
+	FULL_LIB_VER="$MAIN_LIB_VER.18.2"
+	ASPRINTFVER_F="0"
+	GETTEXTVERPO_F="0"
+   	LIBINTLVER_F="8"
+	;;
     *)
 	fail "Unknown version"
 esac
 
 # patch
 # lion + xcode 4.3
-#patch -Np0 < ../scripts/patches/gettext-0.18.1.1-lion.patch
+osx_version=$(sw_vers -productVersion|cut -d '.' -f 1,2)
+case "$osx_version" in
+	10.7 | 10.8)
+	patch -Np0 < ../scripts/patches/gettext-0.18.1.1-lion.patch
+	;;
+esac
 
 # compile
 
@@ -78,6 +92,9 @@ do
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
     
+    mkdir -p build-$ARCH
+    cd build-$ARCH
+
     ARCHARGs=""
     MACSDKDIR=""
     
@@ -108,7 +125,7 @@ do
 	CPPFLAGS="-I$REPOSITORYDIR/include -I/usr/include " \
 	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
 	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+	../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--enable-shared --enable-static --disable-csharp --disable-java \
 	--with-included-gettext --with-included-glib --disable-openmp \
@@ -118,6 +135,7 @@ do
     make clean;
     make || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
+    cd ..
 done
 
 # merge libgettext
@@ -134,21 +152,23 @@ if [ -f "$REPOSITORYDIR/lib/libgettextsrc-$FULL_LIB_VER.dylib" ] ; then
  ln -sfn libgettextsrc-$FULL_LIB_VER.dylib $REPOSITORYDIR/lib/libgettextsrc.dylib;
 fi
 
-if [ -f "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib" ] ; then
+if [ -f "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_M.dylib" ] ; then
  install_name_tool -id "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib" "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib"
- ln -sfn libgettextpo.$GETTEXTVERPO_F.dylib $REPOSITORYDIR/lib/libgettextpo.0.dylib;
  ln -sfn libgettextpo.$GETTEXTVERPO_F.dylib $REPOSITORYDIR/lib/libgettextpo.dylib;
+ #ln -sfn libgettextpo.$GETTEXTVERPO_M.dylib $REPOSITORYDIR/lib/libgettextpo.dylib;
+else
+	echo "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_M.dylib does not exist"
 fi
 
 if [ -f "$REPOSITORYDIR/lib/libasprintf.$ASPRINTFVER_F.dylib" ] ; then
  install_name_tool -id "$REPOSITORYDIR/lib/libasprintf.$ASPRINTFVER_F.dylib" "$REPOSITORYDIR/lib/libasprintf.$ASPRINTFVER_F.dylib"
- ln -sfn libasprintf.$ASPRINTFVER_F.dylib $REPOSITORYDIR/lib/libasprintf.0.dylib;
+ #ln -sfn libasprintf.$ASPRINTFVER_F.dylib $REPOSITORYDIR/lib/libasprintf.0.dylib;
  ln -sfn libasprintf.$ASPRINTFVER_F.dylib $REPOSITORYDIR/lib/libasprintf.dylib;
 fi
 
 if [ -f "$REPOSITORYDIR/lib/libintl.$LIBINTLVER_F.dylib" ] ; then
  install_name_tool -id "$REPOSITORYDIR/lib/libintl.$LIBINTLVER_F.dylib" "$REPOSITORYDIR/lib/libintl.$LIBINTLVER_F.dylib"
- ln -sfn libintl.$LIBINTLVER_F.dylib $REPOSITORYDIR/lib/libintl.8.dylib;
+ #ln -sfn libintl.$LIBINTLVER_F.dylib $REPOSITORYDIR/lib/libintl.8.dylib;
  ln -sfn libintl.$LIBINTLVER_F.dylib $REPOSITORYDIR/lib/libintl.dylib;
 fi
 
@@ -189,4 +209,5 @@ do
     done
 done
 
-
+# clean
+clean_build_directories

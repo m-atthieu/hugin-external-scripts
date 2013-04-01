@@ -34,7 +34,7 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
@@ -252,3 +252,6 @@ do
     chmod +x $REPOSITORYDIR/bin/wx-config
     break;
 done
+
+# clean
+rm -rf osx-{i386,x86_64}-build

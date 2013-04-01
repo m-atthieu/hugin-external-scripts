@@ -44,8 +44,18 @@ sed -e 's/\.\/eLut/\.\/eLut-native/' \
 
 # compile
 
-ILMVER_M="6"
-ILMVER_FULL="$ILMVER_M.0.0"
+case "$(basename $(pwd))" in 
+    "ilmbase-1.0.2")
+	ILMVER_M="6"
+	ILMVER_FULL="$ILMVER_M.0.0"
+	;;
+    "ilmbase-1.0.3")
+	ILMVER_M="7"
+	ILMVER_FULL="$ILMVER_M.0.0"
+	;;
+    *)
+	fail "Unknown version"
+esac
 
 for ARCH in $ARCHS
 do
@@ -92,7 +102,8 @@ do
     chmod +x libtool
     
     #hack for apple-gcc 4.2
-    if [ ${CC##*-} = 4.2 ] ; then
+	gcc_version=$(gcc --version |grep "(GCC)" |cut -d ' ' -f 3|cut -d '.' -f 1,2)
+    if [ "$gcc_version" = "4.2" ] ; then
 	for dir in Half Iex IlmThread Imath
 	do
 	    mv $dir/Makefile $dir/Makefile.bk
@@ -105,18 +116,16 @@ do
     make install || fail "make install step of $ARCH";
 done
 
-
 # merge
+LIBNAMES="IlmThread Imath Iex IexMath Half"
 
-LIBNAMES="IlmThread Imath Iex Half"
-
-merge_libraries $(for libname in $LIBNAMES; do echo "lib/lib$libname.a lib/lib$libname.$ILMVER_FULL.dylib "; done)
+merge_libraries $(for libname in $LIBNAMES; do echo "lib/lib$libname.a lib/lib$libname.$ILMVER_M.dylib "; done)
 
 for libname in $LIBNAMES
 do
-    if [ -f "$REPOSITORYDIR/lib/lib$libname.$ILMVER_FULL.dylib" ]
+    if [ -f "$REPOSITORYDIR/lib/lib$libname.$ILMVER_M.dylib" ]
     then
-	install_name_tool -id "$REPOSITORYDIR/lib/lib$libname.$ILMVER_M.dylib" "$REPOSITORYDIR/lib/lib$libname.$ILMVER_FULL.dylib";
+	install_name_tool -id "$REPOSITORYDIR/lib/lib$libname.$ILMVER_M.dylib" "$REPOSITORYDIR/lib/lib$libname.$ILMVER_M.dylib";
   
 	for ARCH in $ARCHS
 	do
@@ -125,21 +134,23 @@ do
 		install_name_tool \
 		    -change "$REPOSITORYDIR/arch/$ARCH/lib/lib$libname_two.$ILMVER_M.dylib" \
 		    "$REPOSITORYDIR/lib/lib$libname_two.$ILMVER_M.dylib" \
-		    "$REPOSITORYDIR/lib/lib$libname.$ILMVER_FULL.dylib";
+		    "$REPOSITORYDIR/lib/lib$libname.$ILMVER_M.dylib";
 	    done
-  done
+	done
 	
-	ln -sfn "lib$libname.$ILMVER_FULL.dylib" "$REPOSITORYDIR/lib/lib$libname.$ILMVER_M.dylib";
-	ln -sfn "lib$libname.$ILMVER_FULL.dylib" "$REPOSITORYDIR/lib/lib$libname.dylib";
+	ln -sfn "lib$libname.$ILMVER_M.dylib" "$REPOSITORYDIR/lib/lib$libname.$ILMVER_FULL.dylib";
+	ln -sfn "lib$libname.$ILMVER_M.dylib" "$REPOSITORYDIR/lib/lib$libname.dylib";
     fi
 done
 
 
 #pkgconfig
-
 for ARCH in $ARCHS
 do
     mkdir -p "$REPOSITORYDIR/lib/pkgconfig";
     sed 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' "$REPOSITORYDIR/arch/$ARCH/lib/pkgconfig/IlmBase.pc" > "$REPOSITORYDIR/lib/pkgconfig/IlmBase.pc";
     break;
 done
+
+# clean
+make distclean 1> /dev/null

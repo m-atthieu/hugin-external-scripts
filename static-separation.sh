@@ -1,3 +1,8 @@
+if [ -z "$REPOSITORYDIR" ]; then
+	echo "REPOSITORYDIR is not set"
+	exit -1
+fi
+
 cd $REPOSITORYDIR
 
 if [ ! -d lib-static ] ; then

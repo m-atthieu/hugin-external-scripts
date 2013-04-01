@@ -21,6 +21,17 @@ fail()
         exit 1
 }
 
+case "$(basename $(pwd))" in 
+    "tiff-3.9.5")
+	TIFF_VER="3"
+	;;
+    "tiff-4.0.3")
+	TIFF_VER="5"
+	;;
+    *)
+	fail "Unknown version"
+esac
+
 uname_release=$(uname -r)
 uname_arch=$(uname -p)
 [ $uname_arch = powerpc ] && uname_arch="ppc"
@@ -32,7 +43,7 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
@@ -135,22 +146,21 @@ do
     cp "./libtiff/tiffconf.h" "$REPOSITORYDIR/arch/$ARCH/include/tiffconf.h";
 done
 
-
 # merge libtiff
 
-merge_libraries lib/libtiff.a lib/libtiffxx.a lib/libtiff.3.dylib lib/libtiffxx.3.dylib
+merge_libraries lib/libtiff.a lib/libtiffxx.a lib/libtiff.${TIFF_VER}.dylib lib/libtiffxx.${TIFF_VER}.dylib
 
-if [ -f "$REPOSITORYDIR/lib/libtiff.3.dylib" ] ; then
-  install_name_tool -id "$REPOSITORYDIR/lib/libtiff.3.dylib" "$REPOSITORYDIR/lib/libtiff.3.dylib";
-  ln -sfn libtiff.3.dylib $REPOSITORYDIR/lib/libtiff.dylib;
+if [ -f "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib" ] ; then
+  install_name_tool -id "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib" "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib";
+  ln -sfn libtiff.${TIFF_VER}.dylib $REPOSITORYDIR/lib/libtiff.dylib;
 fi
-if [ -f "$REPOSITORYDIR/lib/libtiffxx.3.dylib" ] ; then
-  install_name_tool -id "$REPOSITORYDIR/lib/libtiffxx.3.dylib" "$REPOSITORYDIR/lib/libtiffxx.3.dylib";
+if [ -f "$REPOSITORYDIR/lib/libtiffxx.${TIFF_VER}.dylib" ] ; then
+  install_name_tool -id "$REPOSITORYDIR/lib/libtiffxx.${TIFF_VER}.dylib" "$REPOSITORYDIR/lib/libtiffxx.${TIFF_VER}.dylib";
   for ARCH in $ARCHS
   do
-    install_name_tool -change "$REPOSITORYDIR/arch/$ARCH/lib/libtiff.3.dylib" "$REPOSITORYDIR/lib/libtiff.3.dylib" "$REPOSITORYDIR/lib/libtiffxx.3.dylib";
+    install_name_tool -change "$REPOSITORYDIR/arch/$ARCH/lib/libtiff.${TIFF_VER}.dylib" "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib" "$REPOSITORYDIR/lib/libtiffxx.${TIFF_VER}.dylib";
   done
-  ln -sfn libtiffxx.3.dylib $REPOSITORYDIR/lib/libtiffxx.dylib;
+  ln -sfn libtiffxx.${TIFF_VER}.dylib $REPOSITORYDIR/lib/libtiffxx.dylib;
 fi
 
 # merge config.h
@@ -193,3 +203,6 @@ do
 	fi
     done
 done
+
+# clean
+make distclean 1> /dev/null

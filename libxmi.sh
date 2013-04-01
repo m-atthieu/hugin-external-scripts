@@ -108,4 +108,5 @@ done
 merge_libraries lib/libxmi.a "lib/libxmi.$XMI_FULL_VSN.dylib"
 change_library_id "libxmi.$XMI_FULL_VSN.dylib" "libxmi.$XMI_VSN.dylib" "libxmi.dylib"
 
-	
+# clean
+make distclean 1> /dev/null

@@ -32,33 +32,32 @@ function build()
 
 # To start this script in the middle, uncomment the next 2 lines and move the "fi" line down as needed
 #if [ -z "this will test will fail" ] ; then; fi
-build boost     boost_1_47_0    boost-1.47.0.sh
-build expat     expat-2.0.1     libexpat.sh
-build iconv     libiconv-1.13.1 libiconv-1.13.1.sh
-build gettext   gettext-0.17    gettext-0.17.sh
-build libjpeg-8 jpeg-8c         libjpeg.sh
-build png       libpng-1.2.46   libpng-1.2.46.sh
-build tiff      tiff-3.9.5      libtiff.sh
-build ilmbase   ilmbase-1.0.2   ilmbase-1.0.2.sh
-build openexr   openexr-1.7.0   openexr17.sh
-build libpano13 libpano13.hg    pano13-trunk.sh
-build libexiv2  exiv2-0.22      libexiv2-0.22.sh
-build liblcms   lcms-1.19       lcms.sh
-build libxmi    libxmi-1.2      libxmi.sh
-build libglew   glew-1.5.8      libglew-1.5.8.sh
-build gnumake   gnumake-126.2   gnumake-126.2.sh
-build wxmac     wxMac-2.8.12    wxmac28.sh
+build expat     expat-2.1.0      libexpat.sh
+build iconv     libiconv-1.14 	 libiconv.sh
+build gettext   gettext-0.18.2   gettext.sh
+build libjpeg   jpeg-8d          libjpeg.sh
+build png       libpng-1.4.11    libpng14.sh
+build tiff      tiff-3.9.5       libtiff.sh
+build ilmbase   ilmbase-1.0.3    ilmbase.sh
+build openexr   openexr-1.7.1    openexr17.sh
+build libpano13 libpano13.hg     pano13.sh
+build libexiv2  exiv2-0.23       libexiv2.sh
+build liblcms   lcms-1.19        lcms.sh
+build liblcms2  lcms-2.24        lcms2.sh
+build libglew   glew-1.9.0       libglew.sh
+build gnumake   gnumake-126.2    gnumake.sh
+build wxmac     wxWidgets-2.9.4  wxmac29.sh
 
-build gsl		gsl-1.15		gsl.sh # enblend.hg dependnecy
-# Correct funky name for the enblend-enfuse-4.0 directory
-if [ ! -d ../enblend-enfuse-4.0 ] && [ -d ../enblend-enfuse-4.0-753b534c819d ] ; then
-    ln -s enblend-enfuse-4.0-753b534c819d ../enblend-enfuse-4.0
-fi
-build enblend-enfuse enblend-enfuse-4.0 enblend.sh
+# enblend doesn't need libxmi anymore
+build boost          boost_1_46_1         boost.sh
+build gsl	     gsl-1.15		  gsl.sh # needed by enblend.hg, enblend-4.1 & >
+build vigra          vigra-1.9.0          vigra.sh
+build enblend-enfuse enblend-enfuse-4.1.1 enblend.sh
 
 build tclap          tclap-1.2.1        tclap.sh
 build zthread        ZThread-2.3.2      zthread.sh
 
+build libffi  libffi-3.0.31 libffi.sh
 build glib2   glib-2.28.8   libglib2.sh
 build lensfun lensfun-0.2.6 lensfun.sh
 

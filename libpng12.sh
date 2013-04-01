@@ -32,6 +32,11 @@ case "$(basename $(pwd))" in
         PNGVER="1.2.46"
         PNGVER_FULL="$PNGVER_M.1.2.46"
         ;;
+    'libpng-1.2.50')
+        PNGVER_M="12"
+        PNGVER="1.2.50"
+        PNGVER_FULL="$PNGVER_M.1.2.50"
+        ;;
     *) 
         fail "Unknown version"
         ;;
@@ -139,3 +144,6 @@ if [ -f "$REPOSITORYDIR/lib/libpng.3.$PNGVER.dylib" ] ; then
  ln -sfn libpng.3.$PNGVER.dylib $REPOSITORYDIR/lib/libpng.3.dylib;
  ln -sfn libpng.3.dylib $REPOSITORYDIR/lib/libpng.dylib;
 fi
+
+# clean
+make clean 1> /dev/null

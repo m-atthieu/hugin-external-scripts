@@ -10,6 +10,13 @@ function check_SetEnv()
     #fi
 }
 
+function clean_build_directories()
+{
+    for ARCH in $ARCHS; do
+	rm -rf build-$ARCH
+    done
+}
+
 function compile_setenv()
 {
     if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then

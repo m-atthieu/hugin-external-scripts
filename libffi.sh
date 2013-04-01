@@ -89,9 +89,7 @@ do
     make $OTHERMAKEARGs install || fail "make install step of $ARCH"
 done
 
-
 # merge libffi
-
 for liba in lib/libffi.a lib/libffi.$VERSION.dylib 
 do
     
@@ -132,3 +130,14 @@ if [ -f "$REPOSITORYDIR/lib/libffi.$VERSION.dylib" ] ; then
  ln -sfn libffi.$VERSION.dylib $REPOSITORYDIR/lib/libffi.dylib;
 fi
 
+# include
+cp -a $REPOSITORYDIR/arch/i386/lib/libffi-3.0.13 $REPOSITORYDIR/lib
+
+# pkg-config
+echo "pkg-config"
+for ARCH in $ARCHS
+do
+    mkdir -p $REPOSITORYDIR/lib/pkgconfig
+    sed 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' $REPOSITORYDIR/arch/$ARCH/lib/pkgconfig/libffi.pc > $REPOSITORYDIR/lib/pkgconfig/libffi.pc
+    break;
+done

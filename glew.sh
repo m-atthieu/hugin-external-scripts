@@ -37,6 +37,11 @@ case "$(basename $(pwd))" in
 	GLEW_MINOR=7
 	GLEW_REV=0
 	;;
+    "glew-1.9.0")
+	GLEW_MAJOR=1
+	GLEW_MINOR=9
+	GLEW_REV=0
+	;;
     *)
 	fail "Unknown version"
 	;;
@@ -53,7 +58,7 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
@@ -129,3 +134,6 @@ change_library_id "libGLEW.$GLEW_MAJOR.$GLEW_MINOR.$GLEW_REV.dylib" "libGLEW.$GL
 
 # install includes
 cp -R include/GL $REPOSITORYDIR/include/;
+
+# clean
+make distclean 1> /dev/null

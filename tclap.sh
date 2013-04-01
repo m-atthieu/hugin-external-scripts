@@ -59,3 +59,6 @@ do
     make || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
 done
+
+# clean
+make distclean 1> /dev/null

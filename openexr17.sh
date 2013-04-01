@@ -20,9 +20,18 @@ fail()
         exit 1
 }
 
-
-EXRVER_M="6"
-EXRVER_FULL="$EXRVER_M.0.0"
+case "$(basename $(pwd))" in 
+    'openexr-1.7.0')
+	EXRVER_M="6"
+	EXRVER_FULL="$EXRVER_M.0.0"
+	;;
+    'openexr-1.7.1')
+	EXRVER_M="7"
+	EXRVER_FULL="$EXRVER_M.0.0"
+	;;
+    *)
+	fail "Unknown version"
+esac
 
 NATIVE_LIBHALF_DIR="$REPOSITORYDIR/lib"
 
@@ -37,7 +46,7 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/SDKs/MacOSX$os_sdkvsn.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH="$uname_arch"
 NATIVE_OPTIMIZE=""
@@ -177,14 +186,13 @@ do
     
 done
 
-
 # merge
-merge_libraries lib/libIlmImf.a lib/libIlmImf.$EXRVER_FULL.dylib
+merge_libraries lib/libIlmImf.a lib/libIlmImf.$EXRVER_M.dylib
 
-if [ -f "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_FULL.dylib" ] ; then
-  install_name_tool -id "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_M.dylib" "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_FULL.dylib";
-  ln -sfn "libIlmImf.$EXRVER_FULL.dylib" "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_M.dylib";
-  ln -sfn "libIlmImf.$EXRVER_FULL.dylib" "$REPOSITORYDIR/lib/libIlmImf.dylib";
+if [ -f "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_M.dylib" ] ; then
+  install_name_tool -id "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_M.dylib" "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_M.dylib";
+  ln -sfn "libIlmImf.$EXRVER_M.dylib" "$REPOSITORYDIR/lib/libIlmImf.$EXRVER_FULL.dylib";
+  ln -sfn "libIlmImf.$EXRVER_M.dylib" "$REPOSITORYDIR/lib/libIlmImf.dylib";
 fi
 
 #pkgconfig
@@ -195,3 +203,6 @@ do
     sed 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' $REPOSITORYDIR/arch/$ARCH/lib/pkgconfig/OpenEXR.pc > $REPOSITORYDIR/lib/pkgconfig/OpenEXR.pc
     break;
 done
+
+# clean
+make distclean 1> /dev/null

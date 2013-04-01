@@ -44,6 +44,9 @@ do
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+
+    #mkdir -p build-$ARCH
+    #cd build-$ARCH
     
     ARCHARGs=""
     MACSDKDIR=""
@@ -93,6 +96,7 @@ do
     make clean
     make || fail "failed at make step of $ARCH";
     make $OTHERMAKEARGs install || fail "make install step of $ARCH";
+    #cd ..
 done
 
 
@@ -100,3 +104,6 @@ done
 merge_libraries lib/liblcms.a lib/liblcms.$LCMSVER_FULL.dylib
 change_library_id "liblcms.$LCMSVER_FULL.dylib" "liblcms.$LCMSVER_M.dylib" "liblcms.dylib"
 
+# clean
+#clean_build_directories
+make distclean 1> /dev/null

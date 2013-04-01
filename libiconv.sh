@@ -42,7 +42,10 @@ do
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
-    
+
+    mkdir build-$ARCH
+    cd build-$ARCH
+
     ARCHARGs=""
     MACSDKDIR=""
     
@@ -83,7 +86,7 @@ do
 	CPPFLAGS="-I$REPOSITORYDIR/include" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
 	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+	../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--disable-nls --enable-extra-encodings \
 	--without-libiconv-prefix --without-libintl-prefix \
@@ -92,6 +95,7 @@ do
     make clean
     make || fail "failed at make step of $ARCH"
     make $OTHERMAKEARGs install || fail "make install step of $ARCH"
+    cd ..
 done
 
 # merge libiconv
@@ -103,3 +107,5 @@ change_library_id libcharset.$CHARSETVER.dylib libcharset.dylib
 # merge execs
 merge_execs "bin/iconv"
 
+# clean
+clean_build_directories

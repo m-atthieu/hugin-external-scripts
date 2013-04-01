@@ -34,6 +34,10 @@ case "$(basename $(pwd))" in
 	EXIV2VER_M="11"
 	EXIV2VER_FULL="$EXIV2VER_M.3.1"
 	;;
+    "exiv2-0.23")
+	EXIV2VER_M="12"
+	EXIV2VER_FULL="$EXIV2VER_M.3.1"
+	;;
     *)
 	fail "Unknown version"
 esac
@@ -141,3 +145,5 @@ do
     break;
 done
 
+# clean
+make distclean 1> /dev/null

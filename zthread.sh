@@ -166,3 +166,6 @@ then
     ln -sfn lib$LIBNAME-$LIBVER_FULL.dylib $REPOSITORYDIR/lib/lib$LIBNAME-$LIBVER_M.dylib;
     ln -sfn lib$LIBNAME-$LIBVER_FULL.dylib $REPOSITORYDIR/lib/lib$LIBNAME.dylib;
 fi
+
+# clean
+make distclean 1> /dev/null

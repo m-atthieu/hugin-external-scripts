@@ -31,7 +31,7 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn . Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)"/Platforms/MacOSX.platform/Developer/SDKs/MacOSX"$os_sdkvsn".sdk
+NATIVE_SDKDIR="$(xcode-select -print-path)"/SDKs/MacOSX"$os_sdkvsn".sdk
 if [ $os_dotvsn -eq 7 -o $os_dotvsn -eq 8 ]; then
 	NATIVE_OSVERSION="10.6"
 else
@@ -57,7 +57,6 @@ mkdir -p "$REPOSITORYDIR/include";
 EXPATVER_M="1"
 EXPATVER_FULL="$EXPATVER_M.5.2"
 
-
 # compile
 
 for ARCH in $ARCHS
@@ -66,6 +65,9 @@ do
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+
+    mkdir build-$ARCH
+    cd build-$ARCH
     
     ARCHARGs=""
     MACSDKDIR=""
@@ -126,7 +128,7 @@ do
 	CPPFLAGS="-I$REPOSITORYDIR/include" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
 	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR"  \
+	../configure --prefix="$REPOSITORYDIR"  \
 	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
 	--enable-shared || fail "configure step for $ARCH";
     
@@ -134,16 +136,19 @@ do
     make clean;
     make $OTHERMAKEARGs buildlib || fail "failed at make step of $ARCH";
     make installlib || fail "failed at make install step of $ARCH";
-    
+    cd ..
 done
-
 
 # merge libexpat
 
-merge_libraries lib/libexpat.a lib/libexpat.$EXPATVER_FULL.dylib
+merge_libraries lib/libexpat.a lib/libexpat.$EXPATVER_M.dylib
 
-if [ -f "$REPOSITORYDIR/lib/libexpat.$EXPATVER_FULL.dylib" ] ; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libexpat.$EXPATVER_FULL.dylib" "$REPOSITORYDIR/lib/libexpat.$EXPATVER_FULL.dylib"
-    ln -sfn libexpat.$EXPATVER_FULL.dylib $REPOSITORYDIR/lib/libexpat.$EXPATVER_M.dylib;
-    ln -sfn libexpat.$EXPATVER_FULL.dylib $REPOSITORYDIR/lib/libexpat.dylib;
+if [ -f "$REPOSITORYDIR/lib/libexpat.$EXPATVER_M.dylib" ] ; then
+    install_name_tool -id "$REPOSITORYDIR/lib/libexpat.$EXPATVER_M.dylib" "$REPOSITORYDIR/lib/libexpat.$EXPATVER_M.dylib"
+    # 2.1.0 is straight libexpat.1.dylib
+    #ln -sfn libexpat.$EXPATVER_FULL.dylib $REPOSITORYDIR/lib/libexpat.$EXPATVER_M.dylib;
+    ln -sfn libexpat.$EXPATVER_M.dylib $REPOSITORYDIR/lib/libexpat.dylib;
 fi
+
+# clean
+rm -rf build-{i386,x86_64}
