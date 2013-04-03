@@ -199,13 +199,21 @@ merge_execs bin/msguniq bin/envsubst bin/recode-sr-latin
 
 for ARCH in $ARCHS
 do
-    for gettextlib in $REPOSITORYDIR/lib/libgettextlib-$FULL_LIB_VER.dylib $REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib $REPOSITORYDIR/lib/libgettextsrc-$FULL_LIB_VER.dylib
+    for gettextlib in $REPOSITORYDIR/lib/libgettextlib-$FULL_LIB_VER.dylib \
+			$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib \
+			$REPOSITORYDIR/lib/libgettextsrc-$FULL_LIB_VER.dylib \
+			$REPOSITORYDIR/bin/msg* \
+			$REPOSITORYDIR/bin/gettext \
+			$REPOSITORYDIR/bin/ngettext \
+			$REPOSITORYDIR/bin/recode-sr-latin \
+			$REPOSITORYDIR/bin/xgettext \
+			$REPOSITORYDIR/bin/iconv
     do
-	for lib in $(otool -L $gettextlib | grep $REPOSITORYDIR/arch/$ARCH/lib | sed -e 's/ (.*$//' -e 's/^.*\///')
-	do
-	    echo " Changing install name for: $lib inside : $gettextlib"
-	    install_name_tool -change "$REPOSITORYDIR/arch/$ARCH/lib/$lib" "$REPOSITORYDIR/lib/$lib" $gettextlib
-	done
+		for lib in $(otool -L $gettextlib | grep $REPOSITORYDIR/arch/$ARCH/lib | sed -e 's/ (.*$//' -e 's/^.*\///')
+		do
+			echo " Changing install name for: $lib inside : $gettextlib"
+			install_name_tool -change "$REPOSITORYDIR/arch/$ARCH/lib/$lib" "$REPOSITORYDIR/lib/$lib" $gettextlib
+		done
     done
 done
 
