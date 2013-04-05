@@ -32,36 +32,37 @@ function build()
 
 # To start this script in the middle, uncomment the next 2 lines and move the "fi" line down as needed
 #if [ -z "this will test will fail" ] ; then; fi
-build expat     expat-2.1.0      libexpat.sh
-build iconv     libiconv-1.14 	 libiconv.sh
-build gettext   gettext-0.18.2   gettext.sh
-build libjpeg   jpeg-8d          libjpeg.sh
-build png       libpng-1.4.11    libpng14.sh
-build tiff      tiff-3.9.5       libtiff.sh
-build ilmbase   ilmbase-1.0.3    ilmbase.sh
-build openexr   openexr-1.7.1    openexr17.sh
-build libpano13 libpano13.hg     pano13.sh
-build libexiv2  exiv2-0.23       libexiv2.sh
-build liblcms   lcms-1.19        lcms.sh
-build liblcms2  lcms-2.24        lcms2.sh
-build libglew   glew-1.9.0       libglew.sh
-build gnumake   gnumake-126.2    gnumake.sh
-build wxmac     wxWidgets-2.9.4  wxmac29.sh
+build expat          expat-2.1.0          expat.sh
+build iconv          libiconv-1.14        libiconv.sh
+build gettext        gettext-0.18.2       gettext.sh
+build libjpeg        jpeg-8d              jpeg.sh
+build png            libpng-1.4.12        libpng14.sh
+build tiff           tiff-3.9.5           tiff.sh
+build ilmbase        ilmbase-1.0.3        ilmbase.sh
+build openexr        openexr-1.7.1        openexr17.sh
+build libpano13      libpano13.hg         pano13.sh
+build libexiv2       exiv2-0.23           exiv2.sh
+build liblcms        lcms-1.19            lcms.sh
+build liblcms2       lcms2-2.4            lcms2.sh
+build libglew        glew-1.9.0           libglew.sh
+build gnumake        gnumake-126.2        gnumake.sh
+build wxmac          wxWidgets-2.9.4      wxmac29.sh
 
 # enblend doesn't need libxmi anymore
-build boost          boost_1_46_1         boost.sh
+build boost          boost_1_46_1         boost.sh 
 build gsl	     gsl-1.15		  gsl.sh # needed by enblend.hg, enblend-4.1 & >
-build vigra          vigra-1.9.0          vigra.sh
+build vigra          vigra-1.9.0          vigra.sh # needed by enblend
 build enblend-enfuse enblend-enfuse-4.1.1 enblend.sh
 
-build tclap          tclap-1.2.1        tclap.sh
-build zthread        ZThread-2.3.2      zthread.sh
+build tclap          tclap-1.2.1          tclap.sh
 
-build libffi  libffi-3.0.31 libffi.sh
-build glib2   glib-2.28.8   libglib2.sh
-build lensfun lensfun-0.2.6 lensfun.sh
+build libffi         libffi-3.0.13        libffi.sh
+build glib2          glib-2.36.0          glib2.sh
+build lensfun        lensfun-0.2.7        lensfun.sh
 
-build multiblend multiblend-0.4 multiblend.sh
+build multiblend     multiblend-0.6       multiblend.sh
+build swig           swig-2.0.9           swig.sh
+build flann          flann-1.8.4-src      flann.sh
 
 # Following packages are optional. Uncomment if you are building them
 #echo "$pre autopano-sift-C $pst" && cd ../autopano-sift-C    && sh ../scripts/autopano-sift-C.sh;
