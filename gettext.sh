@@ -152,7 +152,7 @@ if [ -f "$REPOSITORYDIR/lib/libgettextsrc-$FULL_LIB_VER.dylib" ] ; then
  ln -sfn libgettextsrc-$FULL_LIB_VER.dylib $REPOSITORYDIR/lib/libgettextsrc.dylib;
 fi
 
-if [ -f "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_M.dylib" ] ; then
+if [ -f "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib" ] ; then
  install_name_tool -id "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib" "$REPOSITORYDIR/lib/libgettextpo.$GETTEXTVERPO_F.dylib"
  ln -sfn libgettextpo.$GETTEXTVERPO_F.dylib $REPOSITORYDIR/lib/libgettextpo.dylib;
  #ln -sfn libgettextpo.$GETTEXTVERPO_M.dylib $REPOSITORYDIR/lib/libgettextpo.dylib;
