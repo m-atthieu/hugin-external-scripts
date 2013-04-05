@@ -26,6 +26,10 @@ case "$(basename $(pwd))" in
 	FLANNVER_M="1.7"
 	FLANNVER_FULL="$FLANNVER_M.1"
 	;;
+    'flann-1.8.4-src')
+	FLANNVER_M="1.8"
+	FLANNVER_FULL="$FLANNVER_M.4"
+	;;
     "flann.git")
 	FLANNVER_M="1.7"
 	FLANNVER_FULL="$FLANNVER_M.1"
@@ -97,7 +101,7 @@ do
     make install || fail "make install step of $ARCH";
     cd ..
 done
-
+exit
 # merge 
 merge_libraries "lib/libflann_cpp.$FLANNVER_FULL.dylib" "lib/libflann_cpp-gd.dylib" 
 if [ -f "$REPOSITORYDIR/lib/libflann_cpp.$FLANNVER_FULL.dylib" ]; then
