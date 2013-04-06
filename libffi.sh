@@ -131,7 +131,9 @@ if [ -f "$REPOSITORYDIR/lib/libffi.$VERSION.dylib" ] ; then
 fi
 
 # include
-cp -a $REPOSITORYDIR/arch/i386/lib/libffi-3.0.13 $REPOSITORYDIR/lib
+for ARCH in $ARCHS; do
+	cp -a $REPOSITORYDIR/arch/$ARCH/lib/libffi-3.0.13 $REPOSITORYDIR/lib
+done
 
 # pkg-config
 echo "pkg-config"

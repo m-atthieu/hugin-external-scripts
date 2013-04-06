@@ -22,7 +22,7 @@ fail()
 }
 
 case "$(basename $(pwd))" in 
-    "tiff-3.9.5")
+    "tiff-3.9.5" | "tiff-3.9.7")
 	TIFF_VER="3"
 	;;
     "tiff-4.0.3")
