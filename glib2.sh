@@ -98,32 +98,41 @@ do
 done
 
 # merge libglib2
+names="lib/libglib lib/libgmodule lib/libgthread lib/libgobject lib/libgio"
 for liba in lib/libglib-$VERSION.a lib/libglib-$FULLVERSION.dylib lib/libgmodule-$VERSION.a lib/libgmodule-$FULLVERSION.dylib lib/libgthread-$VERSION.a lib/libgthread-$FULLVERSION.dylib lib/libgobject-$VERSION.a lib/libgobject-$FULLVERSION.dylib lib/libgio-$VERSION.a lib/libgio-$FULLVERSION.dylib
 do
     if [ $NUMARCH -eq 1 ] ; then
-	if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
-	    echo "Moving arch/$ARCHS/$liba to $liba"
-  	    mv "$REPOSITORYDIR/arch/$ARCHS/$liba" "$REPOSITORYDIR/$liba";
-	   #Power programming: if filename ends in "a" then ...
-	    [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
-  	    continue
-	else
-	    echo "Program arch/$ARCHS/$liba not found. Aborting build";
-	    exit 1;
-	fi
+		if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
+			echo "Moving arch/$ARCHS/$liba to $liba"
+			mv "$REPOSITORYDIR/arch/$ARCHS/$liba" "$REPOSITORYDIR/$liba";
+			if [ ${liba##*.} = dylib ]; then
+				for libb in $names; do
+					install_name_tool -change \
+						$REPOSITORYDIR/arch/$ARCHS/$libb-$FULLVERSION.dylib \
+						$REPOSITORYDIR/$libb-$FULLVERSION.dylib \
+						$REPOSITORYDIR/$liba
+				done
+			fi
+			#Power programming: if filename ends in "a" then ...
+			[ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
+			continue
+		else
+			echo "Program arch/$ARCHS/$liba not found. Aborting build";
+			exit 1;
+		fi
     fi
     
     LIPOARGs=""
     
     for ARCH in $ARCHS
     do
-	if [ -f $REPOSITORYDIR/arch/$ARCH/$liba ] ; then
-	    echo "Adding arch/$ARCH/$liba to bundle"
-	    LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$liba"
-	else
-	    echo "File arch/$ARCH/$liba was not found. Aborting build";
-	    exit 1;
-	fi
+		if [ -f $REPOSITORYDIR/arch/$ARCH/$liba ] ; then
+			echo "Adding arch/$ARCH/$liba to bundle"
+			LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$liba"
+		else
+			echo "File arch/$ARCH/$liba was not found. Aborting build";
+			exit 1;
+		fi
         echo "First doing the install name stuff for glib libs"
         # Do the name_change thing as the libs are linked to each other in the arc/$ARCH libs.
         # We don't want that
@@ -220,4 +229,5 @@ done
 
 # clean
 #clean_build_directories
+echo "## distclean ##"
 make distclean 1> /dev/null

@@ -94,45 +94,45 @@ do
 done
 
 # merge lensfun libs
-
-for liba in lib/liblensfun.dylib 
-do
-
- if [ $NUMARCH -eq 1 ] ; then
-   if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
-		 echo "Moving arch/$ARCHS/$liba to $liba"
-  	 mv "$REPOSITORYDIR/arch/$ARCHS/$liba" "$REPOSITORYDIR/$liba";
-	   #Power programming: if filename ends in "a" then ...
-	   [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
-  	 continue
-	 else
-		 echo "Program arch/$ARCHS/$liba not found. Aborting build";
-		 exit 1;
+for liba in lib/liblensfun.dylib; do
+	if [ $NUMARCH -eq 1 ] ; then
+		if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
+			echo "Moving arch/$ARCHS/$liba to $liba"
+			mv "$REPOSITORYDIR/arch/$ARCHS/$liba" "$REPOSITORYDIR/$liba";
+			if [ ${liba##*.} = dylib ]; then
+				install_name_tool -id "$REPOSITORYDIR/lib/liblensfun.dylib" "$REPOSITORYDIR/$liba"
+			fi
+			#Power programming: if filename ends in "a" then ...
+			[ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
+			continue
+		 else
+		 	echo "Program arch/$ARCHS/$liba not found. Aborting build";
+			exit 1;
+		 fi
 	 fi
- fi
 
- LIPOARGs=""
+	 LIPOARGs=""
  
- for ARCH in $ARCHS
- do
-	if [ -f $REPOSITORYDIR/arch/$ARCH/$liba ] ; then
-		echo "Adding arch/$ARCH/$liba to bundle"
-		LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$liba"
-	else
-		echo "File arch/$ARCH/$liba was not found. Aborting build";
-		exit 1;
-	fi
-        install_name_tool -id "$REPOSITORYDIR/lib/liblensfun.dylib" "$REPOSITORYDIR/arch/$ARCH/$liba"
- done
+	 for ARCH in $ARCHS; do
+		 if [ -f $REPOSITORYDIR/arch/$ARCH/$liba ] ; then
+			 echo "Adding arch/$ARCH/$liba to bundle"
+			 LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$liba"
+		 else
+			 echo "File arch/$ARCH/$liba was not found. Aborting build";
+			 exit 1;
+		 fi
+		 install_name_tool -id "$REPOSITORYDIR/lib/liblensfun.dylib" "$REPOSITORYDIR/arch/$ARCH/$liba"
+	 done
 
- lipo $LIPOARGs -create -output "$REPOSITORYDIR/$liba";
- #Power programming: if filename ends in "a" then ...
- [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
-
+	 lipo $LIPOARGs -create -output "$REPOSITORYDIR/$liba";
+	 #Power programming: if filename ends in "a" then ...
+	 [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
 done
 
 # share
-cp -a $REPOSITORYDIR/arch/i386/share/lensfun $REPOSITORYDIR/share
+for ARCH in $ARCHS; do
+    cp -a $REPOSITORYDIR/arch/$ARCH/share/lensfun $REPOSITORYDIR/share
+done
 
 # clean
 make distclean 1> /dev/null
