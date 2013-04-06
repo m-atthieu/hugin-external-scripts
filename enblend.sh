@@ -159,6 +159,9 @@ do
 	-DENABLE_GPU:BOOL="OFF" \
         .. || fail "configuring for $ARCH"
     fi
+	if [ ! -f ../config-$ARCH.h ]; then
+		fail "cannot copy ../config-$ARCH.h, you must use configure to generate it"
+	fi
 	cp ../config-$ARCH.h config.h
     make clean || fail "make clean for $ARCH";
     make all $extraBuild || fail "make all for $ARCH"
