@@ -37,7 +37,7 @@ build iconv          libiconv-1.14        libiconv.sh
 build gettext        gettext-0.18.2       gettext.sh
 build libjpeg        jpeg-8d              jpeg.sh
 build png            libpng-1.4.12        libpng14.sh
-build tiff           tiff-3.9.5           tiff.sh
+build tiff           tiff-3.9.7           tiff.sh
 build ilmbase        ilmbase-1.0.3        ilmbase.sh
 build openexr        openexr-1.7.1        openexr17.sh
 build libpano13      libpano13.hg         pano13.sh
