@@ -61,8 +61,8 @@ do
 	MACSDKDIR=$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
-	CC=$x64CC_MP # OpenMP
-	CXX=$x64CXX_MP # OpenMP
+	CC=$x64CC
+	CXX=$x64CXX
 	ARCHFLAG="-m64"
     fi
 
@@ -84,7 +84,9 @@ do
     # Very stupid lensfun doesn't listen very well to CFLAGS/CXXFLAGS etc.. so we have 
     # to manually modify the config.mak
     cp config.mak config.mak.org
-    sed -e "s+/opt/local/lib+$REPOSITORYDIR/arch/$ARCH/lib+g" -e "s+/opt/local/include+$REPOSITORYDIR/include+g" -e 's+png14+png15+g'  config.mak.org > config.mak
+    sed -e "s+/opt/local/lib+$REPOSITORYDIR/arch/$ARCH/lib+g" \
+	-e "s+/opt/local/include+$REPOSITORYDIR/include+g" \
+	-e 's+png14+png15+g'  config.mak.org > config.mak
     
     make libs || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";

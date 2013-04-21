@@ -31,7 +31,7 @@ mkdir -p "$REPOSITORYDIR/include";
 # compile
 
 # remove 64-bit archs from ARCHS
-remove_64bits_from_ARCH
+#remove_64bits_from_ARCH
 
 for ARCH in $ARCHS
 do
@@ -62,8 +62,4 @@ do
 done
 
 # merge execs
-
 merge_execs bin/swig
-
-# hugin requires swig v2 to be named swig2.0
-mv $REPOSITORYDIR/bin/swig $REPOSITORYDIR/bin/swig2.0

@@ -55,6 +55,10 @@ mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
+# for 10.6 compatibility, libpano needs to be built against 10.6 sdk
+SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
+MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
+
 # compile
 for ARCH in $ARCHS
 do
@@ -67,7 +71,7 @@ do
     
     if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
 	TARGET=$i386TARGET
-	MACSDKDIR=$i386MACSDKDIR
+	MACSDKDIR=$MACSDKDIR106 #$i386MACSDKDIR
 	ARCHARGs="$i386ONLYARG"
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
@@ -76,7 +80,7 @@ do
 	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
+	MACSDKDIR=$MACSDKDIR106 #$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
 	CC=$x64CC
@@ -211,4 +215,4 @@ do
 done
 
 # clean
-make distclean 1> /dev/null
+#make distclean 1> /dev/null

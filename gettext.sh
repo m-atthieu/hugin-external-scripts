@@ -76,11 +76,12 @@ case "$(basename $(pwd))" in
 esac
 
 # patch
-# lion + xcode 4.3
+# if lion + xcode 4.3 + sdk 10.7+
+# if lion and sdk 10.6, no
 osx_version=$(sw_vers -productVersion|cut -d '.' -f 1,2)
 case "$osx_version" in
 	10.7 | 10.8)
-	patch -Np0 < ../scripts/patches/gettext-0.18.1.1-lion.patch
+	#patch -Np0 < ../scripts/patches/gettext-0.18.1.1-lion.patch
 	;;
 esac
 

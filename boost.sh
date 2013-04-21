@@ -246,7 +246,8 @@ if [ -f "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" ]; then
     install_name_tool -id "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
     ln -sfn libboost_filesystem-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_filesystem.dylib;
 	# why ?
-    install_name_tool -change "libboost_system.dylib" "@executable_path/../Libraries/libboost_system.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
+    # because it breaks if not done
+    install_name_tool -change "libboost_system.dylib" "@executable_path/../Frameworks/libboost_system.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
 fi
 if [ -f "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.a" ] ; then
     ln -sfn libboost_system-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_system.a;

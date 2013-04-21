@@ -1,0 +1,10 @@
+# compiling for 10.6 on 10.8
+if sdk is 10.8, target 10.6, compiling on 10.8, 
+symbol not found : ___progname in libpano13.2.dylib
+
+if libpano is compiled on 10.6, 
+symbol not found : _wcsdup in libwxcocoau
+
+# gettext
+compiling for sdk 10.6 on 10.8 => gettext-0.17
+compiling for sdk 10.8 on 10.8 => gettext-0.18

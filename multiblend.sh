@@ -37,7 +37,6 @@ fail()
 
 let NUMARCH="0"
 
-
 for i in $ARCHS
 do
     NUMARCH=$(($NUMARCH + 1))
@@ -64,19 +63,19 @@ do
         # multiblend not yet fully compliant with openmp on 32bits
 	ARCHARGs="-march=prescott -mtune=pentium-m -ftree-vectorize -mmacosx-version-min=$i386OSVERSION"
 	OSVERSION="$i386OSVERSION"
-	CC=$i386CC_MP
-	CXX=$i386CXX_MP
-   #myPATH=$ORGPATH
+	CC=$i386CC
+	CXX=$i386CXX
+	#myPATH=$ORGPATH
 	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
 	MACSDKDIR=$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
-	CC=$x64CC_MP
-	CXX=$x64CXX_MP
+	CC=$x64CC
+	CXX=$x64CXX
 	ARCHFLAG="-m64"
-   #myPATH=/usr/local/bin:$PATH
+	#myPATH=/usr/local/bin:$PATH
     fi
     
     echo "## Now compiling $ARCH version ##\n"
@@ -98,7 +97,6 @@ done
 
 
 # merge execs
-
 for program in bin/multiblend
 do
     

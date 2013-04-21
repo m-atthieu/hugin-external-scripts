@@ -124,7 +124,7 @@ do
 	if [ $cmake_or_configure = "configure" ]; then
     env \
 	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
-       CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
+	CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
 	CXXFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
 	CPPFLAGS="-fopenmp -I$REPOSITORYDIR/include -I$REPOSITORYDIR/include/OpenEXR -I/usr/include" \
 	LIBS="-lGLEW -framework GLUT -lobjc -framework OpenGL -framework AGL" \

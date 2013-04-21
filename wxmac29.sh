@@ -34,33 +34,52 @@ case $os_dotvsn in
     * ) echo "Unhandled OS Version: 10.$os_dotvsn. Build aborted."; exit 1 ;;
 esac
 
-NATIVE_SDKDIR="$(xcode-select -print-path)/SDKs/MacOSX$os_sdkvsn.sdk"
+NATIVE_SDKDIR="$(xcode-select -print-path)/SDKs/MacOSX${os_sdkvsn}.sdk"
 NATIVE_OSVERSION="10.$os_dotvsn"
 NATIVE_ARCH=$uname_arch
 NATIVE_OPTIMIZE=""
 
-case "$(basename $(pwd))" in
-    "wxWidgets-2.9.3")
-	WXVERSION="2.9"
-#WXVER_COMP="$WXVERSION.0"     # for 2.8
-	WXVER_COMP="$WXVERSION.3"      # for 2.9.3
 #WXVER_FULL="$WXVER_COMP.5.0"  # for 2.8.8
 #WXVER_FULL="$WXVER_COMP.6.0"  # for 2.8.10
 #WXVER_FULL="$WXVER_COMP.7.0"   # for 2.8.11
-	WXVER_FULL="$WXVER_COMP.0.0"   # for 2.9.2
+
+case "$(basename $(pwd))" in
+    "wxWidgets-2.9.3" | "wxPython-src-2.9.3.1")
+	WXVERSION="2.9"
+    #WXVER_COMP="$WXVERSION.0"
+	WXVER_COMP="$WXVERSION.3"
+	WXVER_FULL="$WXVER_COMP.0.0"
 	;;
     "wxWidgets-2.9.4")
 	WXVERSION="2.9"
 	WXVER_COMP="$WXVERSION.4"      # for 2.9.4
 	WXVER_FULL="$WXVER_COMP.0.0"
 	;;
+	"wxWidgets.git")
+	WXVERSION="2.9"
+	WXVER_COMP="$WXVERSION.5"
+	WXVER_FULL="$WXVER_COMP.0.0"
+	;;
     *)
 	Fail "Unknown wx version"
 esac
 
+# When building on 10.8 with a 10.6 target, version 2.9.3 needs patch, borrowed from 2.9.4
+if [ "$(basename $(pwd))" = "wxWidgets-2.9.3" -a "$os_sdkvsn" = "10.8" ]; then
+    patch -Np0 < ../scripts/patches/wxWidgets-2.9.3-10.6-10.8.diff
+fi
+if [ "$(basename $(pwd))" = "wxPython-src-2.9.3.1" -a "$os_sdkvsn" = "10.8" ]; then
+    patch -Np1 < ../scripts/patches/wxWidgets-2.9.3-10.6-10.8.diff
+fi
+
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
+
+# for 10.6 compatibility, wx needs to be built against 10.6 sdk
+SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
+MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
+
 
 # compile
 let NUMARCH="0"
@@ -81,14 +100,14 @@ do
     
     if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
 	TARGET=$i386TARGET
-	MACSDKDIR=$i386MACSDKDIR
+	MACSDKDIR=$MACSDKDIR106 #$i386MACSDKDIR
 	ARCHARGs="$i386ONLYARG"
 	OSVERSION="$i386OSVERSION"
 	CC=$i386CC
 	CXX=$i386CXX
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
+	MACSDKDIR=$MACSDKDIR106 #$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
 	CC=$x64CC
@@ -106,7 +125,9 @@ do
 	LDFLAGS="-L$REPOSITORYDIR/lib -arch $ARCH -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
 	../configure --prefix="$REPOSITORYDIR" --exec-prefix=$REPOSITORYDIR/arch/$ARCH --disable-dependency-tracking \
 	--host="$TARGET" --with-macosx-sdk=$MACSDKDIR --with-macosx-version-min=$OSVERSION \
-	--enable-monolithic --enable-unicode --with-opengl --disable-compat26 --enable-graphics_ctx --with-osx_cocoa \
+	--enable-monolithic --enable-unicode --with-opengl --disable-compat26 --enable-graphics_ctx --with-cocoa \
+	--with-libiconv-prefix=$REPOSITORYDIR --with-libjpeg --with-libtiff --with-libpng --with-zlib \
+	--without-sdl --disable-sdltest \
 	--enable-shared --disable-debug --enable-aui || fail "configure step for $ARCH";
     
     ### Setup.h is created by configure!
@@ -138,10 +159,7 @@ do
 	10.4 )
 	    dylib_name="dylib1.o"
 	    ;;
-	10.5 | 10.6)
-	    dylib_name="dylib1.10.5.o"
-	    ;;
-	10.7 | 10.8)
+	10.5 | 10.6 | 10.7 | 10.8)
 	    dylib_name="dylib1.10.5.o"
 	    ;;
 	* )
@@ -155,7 +173,7 @@ do
     make --jobs=1 || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
     
-    rm $REPOSITORYDIR/lib/$dylib_name;
+    rm -f $REPOSITORYDIR/lib/$dylib_name;
     
     cd ../;
 done
@@ -168,8 +186,8 @@ merge_libraries "lib/libwx_osx_cocoau-$WXVER_FULL.dylib" "lib/libwx_osx_cocoau_g
 if [ -f "$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_FULL.dylib" ]
 then
     install_name_tool \
-	-id "$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_COMP.dylib" \
-	"$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_FULL.dylib";
+		-id "$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_COMP.dylib" \
+		"$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_FULL.dylib";
     ln -sfn "libwx_osx_cocoau-$WXVER_FULL.dylib" "$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_COMP.dylib";
     ln -sfn "libwx_osx_cocoau-$WXVER_FULL.dylib" "$REPOSITORYDIR/lib/libwx_osx_cocoacu-$WXVERSION.dylib";
 fi
