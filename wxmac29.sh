@@ -189,7 +189,7 @@ then
 		-id "$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_COMP.dylib" \
 		"$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_FULL.dylib";
     ln -sfn "libwx_osx_cocoau-$WXVER_FULL.dylib" "$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVER_COMP.dylib";
-    ln -sfn "libwx_osx_cocoau-$WXVER_FULL.dylib" "$REPOSITORYDIR/lib/libwx_osx_cocoacu-$WXVERSION.dylib";
+    ln -sfn "libwx_osx_cocoau-$WXVER_FULL.dylib" "$REPOSITORYDIR/lib/libwx_osx_cocoau-$WXVERSION.dylib";
 fi
 
 if [ -f "$REPOSITORYDIR/lib/libwx_osx_cocoau_gl-$WXVER_FULL.dylib" ]
@@ -257,16 +257,16 @@ echo "## merging wx-config ##"
 for ARCH in $ARCHS
 do
     if [ -L "$REPOSITORYDIR/arch/$ARCH/bin/wx-config" ]; then
-	input=`ls -l $REPOSITORYDIR/arch/$ARCH/bin/wx-config|cut -d '>' -f 2`
+	    input=`ls -l $REPOSITORYDIR/arch/$ARCH/bin/wx-config|cut -d '>' -f 2`
     else
-	input="$REPOSITORYDIR/arch/$ARCH/bin/wx-config"
+        input="$REPOSITORYDIR/arch/$ARCH/bin/wx-config"
     fi
     sed -e 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' \
-	-e 's/^is_cross \&\& target.*$//' \
-	-e 's/-arch '$ARCH'//' \
-	-e 's,include/i386-apple-darwin10-,include/,' \
-	-e 's,-i386-apple-darwin10,,' \
-	$input > $REPOSITORYDIR/bin/wx-config
+        -e 's/^is_cross \&\& target.*$//' \
+        -e 's/-arch '$ARCH'//' \
+        -e 's,include/'$ARCH'-apple-darwin10-,include/,' \
+        -e 's,-'$ARCH'-apple-darwin10,,' \
+        $input > $REPOSITORYDIR/bin/wx-config
     chmod +x $REPOSITORYDIR/bin/wx-config
     break;
 done

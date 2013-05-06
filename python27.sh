@@ -59,9 +59,10 @@ OSVERSION="$x64OSVERSION"
 CC=$x64CC
 CXX=$x64CXX
 
-mkdir -p build-universal
-cd build-universal
-# --with-universal-archs="intel" --enable-universalsdk=$MACSDKDIR \
+mkdir -p build-fw
+cd build-fw
+# --with-universal-archs="intel" --enable-universalsdk=$MACSDKDIR 
+# Specifying both --enable-shared and --enable-framework is not supported
 env \
     CC=$CC CXX=$CXX \
     CFLAGS="-isysroot $MACSDKDIR  -arch x86_64 $ARCHARGs $OTHERARGs -O3 -dead_strip" \
@@ -69,18 +70,19 @@ env \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
     NEXT_ROOT="$MACSDKDIR" \
-    ../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-    --exec-prefix=$REPOSITORYDIR/ --enable-shared \
-    --with-libs='-lz' \
-    --enable-toolbox-glue --enable-ipv6 --enable-unicode \
-    --with-cxx-main=$CXX \
+    ../configure --enable-framework=$REPOSITORYDIR/Frameworks --with-framework-name=Python27 \
+        --prefix=$REPOSITORYDIR \
+        --with-libs='-lz' \
+        --enable-toolbox-glue --enable-ipv6 --enable-unicode \
+        --with-cxx-main=$CXX \
     || fail "configure step for python 2.7 multi arch";
 
 make clean;
 make || fail "failed at make step of python 2.7 multi arch";
 make install || fail "make install step of python 2.7 multi arch";
 
-chmod u+w $REPOSITORYDIR/lib/libpython2.7.dylib
+#chmod u+w $REPOSITORYDIR/lib/libpython2.7.dylib
+rm -rf $REPOSITORYDIR/Frameworks/Python27.framework/Versions/2.7/lib/python2.7/test
 
 # clean
-rm -rf build-universal
+rm -rf build-fw
