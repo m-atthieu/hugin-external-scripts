@@ -139,7 +139,8 @@ do
     [ -f $REPOSITORYDIR/$crt1obj ] && rm  $REPOSITORYDIR/$crt1obj;
     make clean;
     cd ./port; make $OTHERMAKEARGs || fail "failed at make step of $ARCH";
-    cd ../libtiff; make $OTHERMAKEARGs install || fail "make install step of $ARCH";
+    cd ../libtiff; make $OTHERMAKEARGs install || fail "make libtiff install step of $ARCH";
+    cd ../tools; make $OTHERMAKEARGs install || fail "make tools install step of $ARCH";
     cd ../;
     
     rm $REPOSITORYDIR/include/tiffconf.h;
@@ -149,6 +150,14 @@ done
 # merge libtiff
 
 merge_libraries lib/libtiff.a lib/libtiffxx.a lib/libtiff.${TIFF_VER}.dylib lib/libtiffxx.${TIFF_VER}.dylib
+merge_execs bin/tiffdump
+
+for ARCH in $ARCHS; do
+    install_name_tool -change \
+        "$REPOSITORYDIR/arch/$ARCH/lib/libtiff.${TIFF_VER}.dylib" \
+        "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib" \
+        "$REPOSITORYDIR/bin/tiffdump"
+done
 
 if [ -f "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib" ] ; then
   install_name_tool -id "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib" "$REPOSITORYDIR/lib/libtiff.${TIFF_VER}.dylib";
@@ -205,4 +214,4 @@ do
 done
 
 # clean
-make distclean 1> /dev/null
+#make distclean 1> /dev/null

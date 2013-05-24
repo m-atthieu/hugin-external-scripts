@@ -140,7 +140,6 @@ do
 done
 
 # merge libexpat
-
 merge_libraries lib/libexpat.a lib/libexpat.$EXPATVER_M.dylib
 
 if [ -f "$REPOSITORYDIR/lib/libexpat.$EXPATVER_M.dylib" ] ; then

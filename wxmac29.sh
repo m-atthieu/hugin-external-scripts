@@ -67,9 +67,13 @@ esac
 # When building on 10.8 with a 10.6 target, version 2.9.3 needs patch, borrowed from 2.9.4
 if [ "$(basename $(pwd))" = "wxWidgets-2.9.3" -a "$os_sdkvsn" = "10.8" ]; then
     patch -Np0 < ../scripts/patches/wxWidgets-2.9.3-10.6-10.8.diff
+    # see http://trac.wxwidgets.org/ticket/13888
+    patch -Np0 < ../scripts/patches/wxWidgets-2.9-xh_toolb.diff
 fi
 if [ "$(basename $(pwd))" = "wxPython-src-2.9.3.1" -a "$os_sdkvsn" = "10.8" ]; then
     patch -Np1 < ../scripts/patches/wxWidgets-2.9.3-10.6-10.8.diff
+    # see http://trac.wxwidgets.org/ticket/13888
+    patch -Np0 < ../scripts/patches/wxWidgets-2.9-xh_toolb.diff
 fi
 
 mkdir -p "$REPOSITORYDIR/bin";
@@ -79,7 +83,6 @@ mkdir -p "$REPOSITORYDIR/include";
 # for 10.6 compatibility, wx needs to be built against 10.6 sdk
 SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
 MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
-
 
 # compile
 let NUMARCH="0"
@@ -117,9 +120,9 @@ do
     ARCHARGs=$(echo $ARCHARGs | sed 's/-ftree-vectorize//')
     env \
 	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -dead_strip" \
-	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -dead_strip" \
-	CPPFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -dead_strip -I$REPOSITORYDIR/include" \
+	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -g -dead_strip" \
+	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -g -dead_strip" \
+	CPPFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O2 -g -dead_strip -I$REPOSITORYDIR/include" \
 	OBJCFLAGS="-arch $ARCH" \
 	OBJCXXFLAGS="-arch $ARCH" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -arch $ARCH -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
@@ -127,7 +130,7 @@ do
 	--host="$TARGET" --with-macosx-sdk=$MACSDKDIR --with-macosx-version-min=$OSVERSION \
 	--enable-monolithic --enable-unicode --with-opengl --disable-compat26 --enable-graphics_ctx --with-cocoa \
 	--with-libiconv-prefix=$REPOSITORYDIR --with-libjpeg --with-libtiff --with-libpng --with-zlib \
-	--without-sdl --disable-sdltest \
+	--without-sdl --disable-sdltest --enable-debug \
 	--enable-shared --disable-debug --enable-aui || fail "configure step for $ARCH";
     
     ### Setup.h is created by configure!
@@ -257,19 +260,20 @@ echo "## merging wx-config ##"
 for ARCH in $ARCHS
 do
     if [ -L "$REPOSITORYDIR/arch/$ARCH/bin/wx-config" ]; then
-	    input=`ls -l $REPOSITORYDIR/arch/$ARCH/bin/wx-config|cut -d '>' -f 2`
+	input=`python -c 'import os,sys;print os.path.realpath(sys.argv[1])' $REPOSITORYDIR/arch/$ARCH/bin/wx-config`
     else
         input="$REPOSITORYDIR/arch/$ARCH/bin/wx-config"
     fi
+	set -x
     sed -e 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' \
         -e 's/^is_cross \&\& target.*$//' \
-        -e 's/-arch '$ARCH'//' \
-        -e 's,include/'$ARCH'-apple-darwin10-,include/,' \
-        -e 's,-'$ARCH'-apple-darwin10,,' \
+        -e "s/-arch $ARCH//" \
+        -e "s,include/$ARCH-apple-darwin10-,include/," \
+        -e "s,-$ARCH-apple-darwin10,," \
         $input > $REPOSITORYDIR/bin/wx-config
     chmod +x $REPOSITORYDIR/bin/wx-config
     break;
 done
 
 # clean
-rm -rf osx-{i386,x86_64}-build
+#rm -rf osx-{i386,x86_64}-build
