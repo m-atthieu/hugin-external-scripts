@@ -24,30 +24,7 @@ fail()
     exit 1
 }
 
-# Fancy doc builds on Enblend 3.2 are doomed to failure, so don't even try...
-AC_INIT=$(grep AC_INIT Configure.in)
-TEX=$(which tex)
-
-# If NOT 3.2 and if tex is installed, and if FreeSans.ttf is in the right place...
-if [ -z "$(echo $AC_INIT|grep 3.2,)" ] && \
-    [ -n "$TEX" ]  && [ -f "/Users/$LOGNAME/Library/Fonts/FreeSans.ttf" ]; then 
-    buildDOC="yes"
-    extraConfig="--with-ttf-path=/Users/$LOGNAME/Library/Fonts --enable-split-doc=no"
-    extraBuild="ps pdf xhtml"
-    extraInstall="install-ps install-pdf install-xhtml"
-else
-    buildDOC="no"
-    extraConfig=""
-    extraBuild=""
-    extraInstall=""
-fi 
-
-let NUMARCH="0"
-
-for i in $ARCHS
-do
-    NUMARCH=$(($NUMARCH + 1))
-done
+check_numarchs
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
@@ -69,81 +46,48 @@ fi
 # switch between 'configure' or 'cmake' configuration style
 cmake_or_configure='cmake'
 
-for ARCH in $ARCHS
-do
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
-    
-    ARCHARGs=""
-    MACSDKDIR=""
-    
-    if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
-	TARGET=$i386TARGET
-	MACSDKDIR=$i386MACSDKDIR
-	ARCHARGs="$i386ONLYARG"
-	OSVERSION="$i386OSVERSION"
-	CC=$i386CC_MP # i386CC
-	CXX=$i386CXX_MP # i386CXX
-	CPP=$i386CPP_MP
-	CXXCPP=$i386CXXCPP_MP
-	MARCH=-m32
-    elif [ $ARCH = "x86_64" ] ; then
-	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC_MP # $x64CC
-	CXX=$x64CXX_MP # $x64CXX
-	CPP=$x64CPP_MP
-	CXXCPP=$x64CXXCPP_MP
-	MARCH=-m64
-    fi
-    
-    # To build documentation, you will need to install the following (port) packages:
-    #   freefont-ttf
-    #   gnuplot
-    #   ghostscript
-    #   texi2html
-    #   transfig
-    #   tidy
-    #  *teTeX
-    # This script presumes you have installed the fonts in ~/Library/Fonts. 
-    # See <http://trac.macports.org/ticket/16938> for how to do this.
-    # (Port installs the fonts here: /opt/local/share/fonts/freefont-ttf/)
-    # The port version of teTeX did not install cleanly for me. Instead, I downloaded a pre-built distro
-    # called MacTeX <http://www.tug.org/mactex/2009/>. After installing, you will need to add this
-    # directory to your PATH, as shown on the next line: 
-    # export PATH=/usr/local/texlive/2009/bin/universal-darwin:$PATH
-    # To make the change permanent, edit ~/.profile.
+ARCH=$ARCHS
 
-    mkdir -p build-$ARCH
-    cd build-$ARCH
-    rm -f CMakeCache.txt
+ARCHARGs=""
+MACSDKDIR=""
 
-	if [ $cmake_or_configure = "configure" ]; then
+TARGET=$x64TARGET
+MACSDKDIR=$x64MACSDKDIR
+ARCHARGs="$x64ONLYARG"
+OSVERSION="$x64OSVERSION"
+CC=$x64CC_MP # $x64CC
+CXX=$x64CXX_MP # $x64CXX
+CPP=$x64CPP_MP
+CXXCPP=$x64CXXCPP_MP
+MARCH=-m64
+
+mkdir -p build-$ARCH
+cd build-$ARCH
+rm -f CMakeCache.txt
+
+if [ $cmake_or_configure = "configure" ]; then
     env \
 	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
-	CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
-	CXXFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
+	CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip -Wno-unused-local-typedefs" \
+	CXXFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip -Wno-unused-local-typedefs" \
 	CPPFLAGS="-fopenmp -I$REPOSITORYDIR/include -I$REPOSITORYDIR/include/OpenEXR -I/usr/include" \
 	LIBS="-lGLEW -framework GLUT -lobjc -framework OpenGL -framework AGL" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
 	NEXT_ROOT="$MACSDKDIR" \
 	PKG_CONFIG_PATH="$REPOSITORYDIR/lib/pkgconfig" \
 	../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH --with-apple-opengl-framework \
+	--host="$TARGET" --with-apple-opengl-framework \
 	--disable-image-cache --enable-openmp=yes --enable-gpu-support=no \
 	--with-glew $extraConfig --with-openexr || fail "configure step for $ARCH"
-	else
+else
     env \
 	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
 	cmake \
         -DCMAKE_VERBOSE_MAKEFILE:BOOL="ON" \
-        -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR/arch/$ARCH" \
+        -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR" \
         -DCMAKE_BUILD_TYPE:STRING="Release" \
-        -DCMAKE_C_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
-        -DCMAKE_CXX_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
+        -DCMAKE_C_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE -Wno-unused-local-typedefs" \
+        -DCMAKE_CXX_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE -Wno-unused-local-typedefs" \
         -DJPEG_INCLUDE_DIR="$REPOSITORYDIR/include" \
         -DJPEG_LIBRARIES="$REPOSITORYDIR/lib/libjpeg.dylib" \
         -DPNG_INCLUDE_DIR="$REPOSITORYDIR/include" \
@@ -154,57 +98,22 @@ do
         -DZLIB_LIBRARIES="/usr/lib/libz.dylib" \
 	-DVIGRA_INCLUDE_DIR="$REPOSITORYDIR/include" \
 	-DVIGRA_LIBRARIES="$REPOSITORYDIR/lib/libvigraimpex.dylib" \
+	-DDOC:BOOL='OFF' \
+	-DENABLE_OPENCL:BOOL='ON' \
 	-DENABLE_OPENMP:BOOL="ON" \
 	-DENABLE_IMAGECACHE:BOOL="OFF" \
 	-DENABLE_GPU:BOOL="OFF" \
         .. || fail "configuring for $ARCH"
-    fi
-	if [ ! -f ../config-$ARCH.h ]; then
-		fail "cannot copy ../config-$ARCH.h, you must use configure to generate it"
-	fi
-	cp ../config-$ARCH.h config.h
-    make clean || fail "make clean for $ARCH";
-    make all $extraBuild || fail "make all for $ARCH"
-    make install $extraInstall || fail "make install for $ARCH";
-    cd ..
-done
-
-# merge execs
-for program in bin/enblend bin/enfuse
-do
-    if [ $NUMARCH -eq 1 ] ; then
-	if [ -f $REPOSITORYDIR/arch/$ARCHS/$program ] ; then
-	    echo "Moving arch/$ARCHS/$program to $program"
-  	    mv "$REPOSITORYDIR/arch/$ARCHS/$program" "$REPOSITORYDIR/$program";
-  	    strip -x "$REPOSITORYDIR/$program";
-  	    continue
-	else
-	    echo "Program arch/$ARCHS/$program not found. Aborting build";
-	    exit 1;
-	fi
-    fi
-    
-    LIPOARGs=""
-    
-    for ARCH in $ARCHS
-    do
- 	if [ -f $REPOSITORYDIR/arch/$ARCH/$program ] ; then
-	    echo "Adding arch/$ARCH/$program to bundle"
- 	    LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$program"
-	else
-	    echo "File arch/$ARCH/$program was not found. Aborting build";
-	    exit 1;
-	fi
-    done
-    
-    lipo $LIPOARGs -create -output "$REPOSITORYDIR/$program";
-    strip -x "$REPOSITORYDIR/$program";
-done
+fi
+perl -p -i -e 's,#define STRERROR_R_CHAR_P 1,//#define STRERROR_R_CHAR_P 1,' config.h
+make clean || fail "make clean for $ARCH";
+make all $extraBuild || fail "make all for $ARCH"
+make install $extraInstall || fail "make install for $ARCH";
 
 # hiding vigra includes
 if [ -d "$REPOSITORYDIR/include/vigra" ]; then
-	mv $REPOSITORYDIR/include/vigra $REPOSITORYDIR/include/vigra-private
+    mv $REPOSITORYDIR/include/vigra $REPOSITORYDIR/include/vigra-private
 fi
 
 # clean
-rm -rf build-*
+make distclean

@@ -1,7 +1,7 @@
 # ------------------
-#     libtiff
+#     openexr
 # ------------------
-# $Id: libtiff.sh 1902 2007-02-04 22:27:47Z ippei $
+# $Id: openexr.sh 2004 2007-05-11 00:17:50Z ippei $
 # Copyright (c) 2007, Ippei Ukai
 
 
@@ -11,7 +11,6 @@ check_SetEnv
 
 # -------------------------------
 # 20091206.0 sg Script tested and used to build 2009.4.0-RC3
-# 20100121.0 sg Script updated for 3.9.2
 # 20100624.0 hvdw More robust error checking on compilation
 # -------------------------------
 
@@ -30,7 +29,6 @@ mkdir -p "$REPOSITORYDIR/include";
 
 # compile
 ARCH=$ARCHS
-
 TARGET=$x64TARGET
 MACSDKDIR=$x64MACSDKDIR
 ARCHARGs="$x64ONLYARG"
@@ -42,25 +40,20 @@ mkdir -p build-$ARCH
 cd build-$ARCH
 
 env \
-    CC=$CC CXX=$CXX \
+    CC="$CC" CXX="$CXX" \
     CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
     CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
-    LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
+    LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
     NEXT_ROOT="$MACSDKDIR" \
+    PKG_CONFIG_PATH="$REPOSITORYDIR/lib/pkgconfig" \
     ../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
     --host="$TARGET" \
-     --enable-shared --with-apple-opengl-framework --without-x \
-    || fail "configure step for $ARCH" ;
-    
-make clean;
-cd ./port; make $OTHERMAKEARGs || fail "failed at make step of $ARCH";
-cd ../libtiff; make $OTHERMAKEARGs install || fail "make libtiff install step of $ARCH";
-cd ../tools; make $OTHERMAKEARGs install || fail "make tools install step of $ARCH";
-cd ../;
+    --enable-shared --disable-static || fail "configure step for $ARCH";
 
-#rm $REPOSITORYDIR/include/tiffconf.h;
-#cp "./libtiff/tiffconf.h" "$REPOSITORYDIR/arch/$ARCH/include/tiffconf.h";
+make clean;
+make $OTHERMAKEARGs all || fail "failed at make step of $ARCH";
+make install || fail "make install step of $ARCH";
 
 # clean
 make distclean

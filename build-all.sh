@@ -35,31 +35,34 @@ function build()
 build expat          expat-2.1.0          expat.sh
 build iconv          libiconv-1.14        libiconv.sh
 build gettext        gettext-0.18.2       gettext.sh
-build libjpeg        jpeg-8d              jpeg.sh
-build png            libpng-1.4.12        libpng14.sh
-build tiff           tiff-3.9.7           tiff.sh
-build ilmbase        ilmbase-1.0.3        ilmbase.sh
-build openexr        openexr-1.7.1        openexr17.sh
+build nasm           nasm-2.10.07         nasm.sh
+build jpeg-turbo     libjpeg-turbo-1.2.90 jpeg-turbo.sh
+
+build png            libpng-1.6.2         libpng16.sh
+build tiff           tiff-4.0.3           tiff.sh
+build ilmbase        ilmbase-2.0.0        ilmbase.sh
+build openexr        openexr-2.0.0        openexr17.sh
 build libpano13      libpano13.hg         pano13.sh
 build libexiv2       exiv2-0.23           exiv2.sh
 build liblcms        lcms-1.19            lcms.sh
 build liblcms2       lcms2-2.4            lcms2.sh
 build libglew        glew-1.9.0           libglew.sh
 build gnumake        gnumake-126.2        gnumake.sh
-build wxmac          wxWidgets-2.9.3      wxmac29.sh
+build wxmac          wxWidgets.git        wxmac29.sh
 
 # enblend doesn't need libxmi anymore
-build boost          boost_1_46_1         boost.sh 
-build gsl	         gsl-1.15		      gsl.sh # needed by enblend.hg, enblend-4.1 & >
+build boost          boost_1_53_0         boost.sh 
+# needed by enblend.hg, enblend >= 4.1
+build gsl	     gsl-1.15	          gsl.sh 
 
 # if you already have gcc >= 4.6, this 4 steps are not necessary
-build gmp            gmp-5.1.1            gmp.sh
+build gmp            gmp-5.1.2            gmp.sh
 build mprf           mpfr-3.1.2           mpfr.sh
-build mpc            mpc-1.0              mpc.sh
-build gcc            gcc-4.8.0            gcc.sh
+build mpc            mpc-1.0.1            mpc.sh
+build gcc            gcc-4.8.1            gcc.sh
 
 build vigra          vigra-1.9.0          vigra.sh # needed by enblend
-build enblend-enfuse enblend-enfuse-4.1.1 enblend.sh
+build enblend-enfuse enblend.hg           enblend.sh
 
 build tclap          tclap-1.2.1          tclap.sh
 
@@ -70,14 +73,8 @@ build lensfun        lensfun-0.2.7        lensfun.sh
 build multiblend     multiblend-0.6       multiblend.sh
 build swig           swig-2.0.9           swig.sh
 build flann          flann-1.8.4-src      flann.sh
+build levmar	     levmar-2.6	          levmar.sh
 
-build python         Python-2.7.4         python27.sh
-
-# Following packages are optional. Uncomment if you are building them
-#echo "$pre autopano-sift-C $pst" && cd ../autopano-sift-C    && sh ../scripts/autopano-sift-C.sh;
-#echo "$pre panomatic $pst"       && cd ../panomatic-0.9.4    && sh ../scripts/panomatic.sh;
-
-# Separate static libraries into their own directory. Needed to build static tools
-sh ../scripts/static-separation.sh
+build python         Python-2.7.5         python27.sh
 
 echo "That's all, folks!!"

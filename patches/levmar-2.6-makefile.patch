@@ -1,0 +1,64 @@
+diff --git a/Makefile b/Makefile
+index 10daec2..05f9b90 100644
+--- a/Makefile
++++ b/Makefile
+@@ -3,22 +3,25 @@
+ # Under windows, use Makefile.vc for MSVC
+ #
+ 
+-CC=gcc
+-CONFIGFLAGS=#-ULINSOLVERS_RETAIN_MEMORY
++#CC=gcc
++#CONFIGFLAGS=#-ULINSOLVERS_RETAIN_MEMORY
+ #ARCHFLAGS=-march=pentium4 # YOU MIGHT WANT TO UNCOMMENT THIS FOR P4
+-CFLAGS=$(CONFIGFLAGS) $(ARCHFLAGS) -O3 -funroll-loops -Wall #-g #-ffast-math #-pg
++CFLAGS += # $(CONFIGFLAGS) $(ARCHFLAGS) -O3 -funroll-loops -Wall #-g #-ffast-math #-pg
+ LAPACKLIBS_PATH=/usr/local/lib # WHEN USING LAPACK, CHANGE THIS TO WHERE YOUR COMPILED LIBS ARE!
+-LDFLAGS=-L$(LAPACKLIBS_PATH) -L.
++LDFLAGS += -L. #-L$(LAPACKLIBS_PATH)
++CPPFLAGS +=
+ LIBOBJS=lm.o Axb.o misc.o lmlec.o lmbc.o lmblec.o lmbleic.o
+ LIBSRCS=lm.c Axb.c misc.c lmlec.c lmbc.c lmblec.c lmbleic.c
+ DEMOBJS=lmdemo.o
+ DEMOSRCS=lmdemo.c
+ AR=ar
+ RANLIB=ranlib
+-LAPACKLIBS=-llapack -lblas -lf2c # comment this line if you are not using LAPACK.
++#LAPACKLIBS=-llapack -lblas -lf2c # comment this line if you are not using LAPACK.
+                                  # On systems with a FORTRAN (not f2c'ed) version of LAPACK, -lf2c is
+                                  # not necessary; on others, -lf2c is equivalent to -lF77 -lI77
+ 
++LAPACKLIBS=-framework Accelerate # MacOSX has Lapack in the Accelerate.framework
++
+ #LAPACKLIBS=-L/usr/local/atlas/lib -llapack -lcblas -lf77blas -latlas -lf2c # This works with the ATLAS updated lapack and Linux_P4SSE2
+                                                                             # from http://www.netlib.org/atlas/archives/linux/
+ 
+@@ -32,14 +35,17 @@ LAPACKLIBS=-llapack -lblas -lf2c # comment this line if you are not using LAPACK
+ 
+ LIBS=$(LAPACKLIBS)
+ 
+-all: liblevmar.a lmdemo
++all: liblevmar.dylib lmdemo
++
++liblevmar.dylib: $(LIBOBJS)
++	libtool -dynamic -flat_namespace $(LIBOBJS) -o $@ -undefined suppress -compatibility_version 2.6 -current_version 2.6 $(LIBS)
+ 
+ liblevmar.a: $(LIBOBJS)
+ 	$(AR) crv liblevmar.a $(LIBOBJS)
+ 	$(RANLIB) liblevmar.a
+ 
+-lmdemo: $(DEMOBJS) liblevmar.a
+-	$(CC) $(LDFLAGS) $(DEMOBJS) -o lmdemo -llevmar $(LIBS) -lm
++lmdemo: $(DEMOBJS) liblevmar.dylib
++	$(CC) $(LDFLAGS) $(DEMOBJS) -o lmdemo -llevmar -lm
+ 
+ lm.o: lm.c lm_core.c levmar.h misc.h compiler.h
+ Axb.o: Axb.c Axb_core.c levmar.h misc.h
+@@ -57,6 +63,7 @@ clean:
+ cleanall: clean
+ 	@rm -f lmdemo
+ 	@rm -f liblevmar.a
++	@rm -f liblevmar.dylib
+ 
+ depend:
+ 	makedepend -f Makefile $(LIBSRCS) $(DEMOSRCS)

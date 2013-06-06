@@ -20,25 +20,14 @@ fail()
         exit 1
 }
 
-
-let NUMARCH="0"
+check_numarchs
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
-
 # compile
-
-# remove 64-bit archs from ARCHS (why ?)
-# tclap is just a set of headers, we just need one arch
-#remove_64bits_from_ARCH
-
-for ARCH in $ARCHS
-do
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+ARCH=$ARCHS
     
     ARCHARGs=""
     MACSDKDIR=""
@@ -53,12 +42,11 @@ do
 	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
 	NEXT_ROOT="$MACSDKDIR" \
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH || fail "configure step for $ARCH";
+	--host="$TARGET"  || fail "configure step for $ARCH";
     
     make clean;
     make || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
-done
 
 # clean
-make distclean 1> /dev/null
+make distclean

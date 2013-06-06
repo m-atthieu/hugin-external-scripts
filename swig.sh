@@ -20,24 +20,14 @@ fail()
     exit 1
 }
 
-
-let NUMARCH="0"
+check_numarchs
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
-
 # compile
-
-# remove 64-bit archs from ARCHS
-#remove_64bits_from_ARCH
-
-for ARCH in $ARCHS
-do
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+ARCH=$ARCHS
     
     ARCHARGs=""
     MACSDKDIR=""
@@ -54,12 +44,10 @@ do
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
 	--disable-ccache --with-boost=$myREPOSITORYDIR/ --without-pcre \
 	--with-python --without-java --without-ruby --without-tcl --without-php --without-perl5 \
-	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH || fail "configure step for $ARCH";
+	--host="$TARGET" || fail "configure step for $ARCH";
     
     make clean;
     make || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
-done
 
-# merge execs
-merge_execs bin/swig
+    make distclean

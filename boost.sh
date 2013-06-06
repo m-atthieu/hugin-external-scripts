@@ -5,18 +5,8 @@
 # Copyright (c) 2007-2008, Ippei Ukai
 
 # prepare
-
-# -------------------------------
-# 20091206.0 sg Script tested and used to build 2009.4.0-RC3
-# 20100121.0 sg Script updated for 1_41
-# 20100121.1 sg Script reverted to 1_40
-# 20100624.0 hvdw More robust error checking on compilation
-# 20100831.0 hvdw Upgraded to 1_44
-# 20100920.0 hvdw Add removed libboost_system again and add iostreams and regex
-# 20100920.1 hvdw Add date_time as well
-# 20111230.0 hvdw Adapt for versions >= 1.46. slightly different source tree structure
-# 20111230.1 hvdw Correct stupid typo
-# -------------------------------
+source ../scripts/functions.sh
+check_SetEnv
 
 fail()
 {
@@ -100,39 +90,17 @@ echo "BJAM command is: $BJAM"
 echo "## Done compiling bjam ##"
 
 # init
-
-ORGPATH=$PATH
-
-let NUMARCH="0"
-
-for i in $ARCHS
-do
-    NUMARCH=$(($NUMARCH + 1))
-done
+check_numarchs
 
 mkdir -p "$REPOSITORYDIR/lib";
 
-
 # compile boost_thread, filesystem, system, regex, iostreams, date_time and signals
+ARCH=$ARCHS
 
-for ARCH in $ARCHS
-do
     echo "\n## Now building architecture $ARCH ##\n"
     rm -rf "stage-$ARCH";
     mkdir -p "stage-$ARCH";
     
-    if [ $ARCH = "i386" -o $ARCH = "i686" ]; then
-	MACSDKDIR=$i386MACSDKDIR
-	OSVERSION=$i386OSVERSION
-	OPTIMIZE=$i386OPTIMIZE
-	boostARCHITECTURE="x86"
-	boostADDRESSMODEL="32"
-	export CC=$i386CC;
-	export CXX=$i386CXX;
-	export ARCHTARGET=$i386TARGET;
-	myPATH=$ORGPATH
-	ARCHFLAG="-m32"
-    elif [ $ARCH = "x86_64" ]; then
 	MACSDKDIR=$x64MACSDKDIR
 	OSVERSION=$x64OSVERSION
 	OPTIMIZE=$x64OPTIMIZE
@@ -142,8 +110,6 @@ do
 	export CXX=$x64CXX;
 	export ARCHTARGET=$x86_64TARGET;
 	ARCHFLAG="-m64"
-	#myPATH=/usr/local/bin:$PATH
-    fi
     
     # env $myPATH
     
@@ -174,114 +140,20 @@ do
 	--with-thread --with-filesystem --with-system --with-regex --with-iostreams \
 	--with-date_time --with-signals \
 	variant=release \
-	architecture="$boostARCHITECTURE" address-model="$boostADDRESSMODEL" 
+	architecture="$boostARCHITECTURE" address-model="$boostADDRESSMODEL" install
 
-    mv ./stage-$ARCH/lib/libboost_thread.dylib ./stage-$ARCH/lib/libboost_thread-$BOOST_VER.dylib
-    mv ./stage-$ARCH/lib/libboost_thread.a ./stage-$ARCH/lib/libboost_thread-$BOOST_VER.a
-    mv ./stage-$ARCH/lib/libboost_filesystem.dylib ./stage-$ARCH/lib/libboost_filesystem-$BOOST_VER.dylib
-    mv ./stage-$ARCH/lib/libboost_filesystem.a ./stage-$ARCH/lib/libboost_filesystem-$BOOST_VER.a
-    mv ./stage-$ARCH/lib/libboost_system.dylib ./stage-$ARCH/lib/libboost_system-$BOOST_VER.dylib
-    mv ./stage-$ARCH/lib/libboost_system.a ./stage-$ARCH/lib/libboost_system-$BOOST_VER.a
-    mv ./stage-$ARCH/lib/libboost_regex.dylib ./stage-$ARCH/lib/libboost_regex-$BOOST_VER.dylib
-    mv ./stage-$ARCH/lib/libboost_regex.a ./stage-$ARCH/lib/libboost_regex-$BOOST_VER.a
-    mv ./stage-$ARCH/lib/libboost_iostreams.dylib ./stage-$ARCH/lib/libboost_iostreams-$BOOST_VER.dylib
-    mv ./stage-$ARCH/lib/libboost_iostreams.a ./stage-$ARCH/lib/libboost_iostreams-$BOOST_VER.a
-    mv ./stage-$ARCH/lib/libboost_date_time.dylib ./stage-$ARCH/lib/libboost_date_time-$BOOST_VER.dylib
-    mv ./stage-$ARCH/lib/libboost_date_time.a ./stage-$ARCH/lib/libboost_date_time-$BOOST_VER.a
-    mv ./stage-$ARCH/lib/libboost_signals.dylib ./stage-$ARCH/lib/libboost_signals-$BOOST_VER.dylib
-    mv ./stage-$ARCH/lib/libboost_signals.a ./stage-$ARCH/lib/libboost_signals-$BOOST_VER.a
+# install_name's are not set correctly
+for name in date_time filesystem iostreams regex signals system thread; do
+    install_name_tool -id $REPOSITORYDIR/lib/libboost_$name.dylib \
+	$REPOSITORYDIR/lib/libboost_$name.dylib
 done
-
-#read pipo
-
-# merge libboost_thread libboost_filesystem libboost_system libboost_regex libboost_iostreams libboost_signals
-
-for liba in "lib/libboost_thread-$BOOST_VER.a" "lib/libboost_filesystem-$BOOST_VER.a" "lib/libboost_system-$BOOST_VER.a" "lib/libboost_regex-$BOOST_VER.a" "lib/libboost_iostreams-$BOOST_VER.a" "lib/libboost_date_time-$BOOST_VER.a" "lib/libboost_signals-$BOOST_VER.a" "lib/libboost_thread-$BOOST_VER.dylib"  "lib/libboost_filesystem-$BOOST_VER.dylib" "lib/libboost_system-$BOOST_VER.dylib" "lib/libboost_regex-$BOOST_VER.dylib"  "lib/libboost_iostreams-$BOOST_VER.dylib" "lib/libboost_date_time-$BOOST_VER.dylib" "lib/libboost_signals-$BOOST_VER.dylib"
-do
-    
-    if [ $NUMARCH -eq 1 ] ; then
-	if [ -f stage-$ARCHS/$liba ] ; then
-	    echo "Moving stage-$ARCHS/$liba to $liba"
-  	    mv "stage-$ARCHS/$liba" "$REPOSITORYDIR/$liba";
-	    # Power programming: if filename ends in "a" then ...
-	    [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
-  	    continue
-	else
-	    echo "Program arch/$ARCHS/$liba not found. Aborting build";
-	    exit 1;
-	fi
-    fi
-    
-    LIPOARGs=""
-    
-    for ARCH in $ARCHS
-    do
-	if [ -f stage-$ARCH/$liba ] ; then
-	    echo "Adding stage-$ARCH/$liba to bundle"
-  	    LIPOARGs="$LIPOARGs stage-$ARCH/$liba"
-	else
-	    echo "File stage-$ARCH/$liba was not found. Aborting build";
-	    exit 1;
-	fi
-    done
-    
-    lipo $LIPOARGs -create -output "$REPOSITORYDIR/$liba";
- #Power programming: if filename ends in "a" then ...
-    [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
-    
+# thus, link are incorrectly set also
+for name in filesystem thread; do
+    install_name_tool -change \
+	libboost_system.dylib \
+	$REPOSITORYDIR/lib/libboost_system.dylib \
+	$REPOSITORYDIR/lib/libboost_$name.dylib
 done
-
-
-if [ -f "$REPOSITORYDIR/lib/libboost_thread-$BOOST_VER.a" ] ; then
-    ln -sfn libboost_thread-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_thread.a;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_thread-$BOOST_VER.dylib" ] ; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libboost_thread-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_thread-$BOOST_VER.dylib";
-    ln -sfn libboost_thread-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_thread.dylib;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.a" ] ; then
-    ln -sfn libboost_filesystem-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_fileystem.a;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" ]; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
-    ln -sfn libboost_filesystem-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_filesystem.dylib;
-	# why ?
-    # because it breaks if not done
-    install_name_tool -change "libboost_system.dylib" "@executable_path/../Frameworks/libboost_system.dylib" "$REPOSITORYDIR/lib/libboost_filesystem-$BOOST_VER.dylib";
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.a" ] ; then
-    ln -sfn libboost_system-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_system.a;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.dylib" ]; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_system-$BOOST_VER.dylib";
-    ln -sfn libboost_system-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_system.dylib;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_regex-$BOOST_VER.a" ] ; then
-    ln -sfn libboost_regex-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_regex.a;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_regex-$BOOST_VER.dylib" ]; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libboost_regex-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_regex-$BOOST_VER.dylib";
-    ln -sfn libboost_regex-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_regex.dylib;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_iostreams-$BOOST_VER.a" ] ; then
-    ln -sfn libboost_iostreams-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_iostreams.a;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_iostreams-$BOOST_VER.dylib" ]; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libboost_iostreams-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_iostreams-$BOOST_VER.dylib";
-    ln -sfn libboost_iostreams-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_iostreams.dylib;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_date_time-$BOOST_VER.a" ] ; then
-    ln -sfn libboost_date_time-$BOOST_VER.a $REPOSITORYDIR/lib/libboost_date_time.a;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_date_time-$BOOST_VER.dylib" ]; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libboost_date_time-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_date_time-$BOOST_VER.dylib";
-    ln -sfn libboost_date_time-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_date_time.dylib;
-fi
-if [ -f "$REPOSITORYDIR/lib/libboost_signals-$BOOST_VER.dylib" ]; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libboost_signals-$BOOST_VER.dylib" "$REPOSITORYDIR/lib/libboost_signals-$BOOST_VER.dylib";
-    ln -sfn libboost_signals-$BOOST_VER.dylib $REPOSITORYDIR/lib/libboost_signals.dylib;
-fi
-
 
 # clean
-rm -rf stage-i386 stage-x86_64
+rm -rf stage-x86_64

@@ -5,7 +5,7 @@
 # Copyright (c) 2007-2008, Ippei Ukai
 
 # prepare
-source ../../scripts/functions.sh
+source ../scripts/functions.sh
 check_SetEnv
 
 fail()
@@ -42,6 +42,10 @@ env \
     OBJCFLAGS="$CFLAGS -arch $ARCH" \
     OBJCXXFLAGS="$CXXFLAGS -arch $ARCH" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
-    $PYTHON setup.py build --no-user-cfg WX_CONFIG=$REPOSITORYDIR/bin/wx-config WXPORT=osx_cocoa MONOLITHIC=1
+	WXWIN=$HOME/Sources/Hugin/External/Build/wxWidgets.git \
+    $PYTHON setup.py build WX_CONFIG=$REPOSITORYDIR/bin/wx-config WXPORT=osx_cocoa MONOLITHIC=1 \
+	|| fail "building wxPython"
 
-$PYTHON setup.py install WX_CONFIG=$REPOSITORYDIR/bin/wx-config WXPORT=osx_cocoa MONOLITHIC=1
+env \
+	WXWIN=$HOME/Sources/Hugin/External/Build/wxWidgets.git \
+	$PYTHON setup.py install WX_CONFIG=$REPOSITORYDIR/bin/wx-config WXPORT=osx_cocoa MONOLITHIC=1
