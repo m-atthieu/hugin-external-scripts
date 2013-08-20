@@ -51,10 +51,15 @@ case "$(basename $(pwd))" in
 	WXVER_FULL="$WXVER_COMP.0.0"
 	;;
     "wxWidgets-2.9.4")
-	WXVERSION="2.9"
-	WXVER_COMP="$WXVERSION.4"      # for 2.9.4
-	WXVER_FULL="$WXVER_COMP.0.0"
-	;;
+	    WXVERSION="2.9"
+        WXVER_COMP="$WXVERSION.4"      # for 2.9.4
+        WXVER_FULL="$WXVER_COMP.0.0"
+        ;;
+    "wxWidgets-2.9.5")
+        WXVERSION="2.9"
+        WXVER_COMP="$WXVERSION.5"
+        WXVER_FULL="$WXVER_COMP.0.0"
+        ;;
 	"wxWidgets.git")
 	WXVERSION="2.9"
 	WXVER_COMP="$WXVERSION.5"
