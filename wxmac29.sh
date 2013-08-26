@@ -48,7 +48,7 @@ OSVERSION="$x64OSVERSION"
 CC=$x64CC
 CXX=$x64CXX
     
-ARCHARGs=$(echo $ARCHARGs | sed 's/-ftree-vectorize//')
+ARCHARGs=$(echo $ARCHARGs | sed 's/-ftree-vectorize//;s/-fopenmp//g')
 
 env \
     CC=$CC CXX=$CXX \
