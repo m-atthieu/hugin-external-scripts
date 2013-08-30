@@ -46,7 +46,7 @@ build liblcms        lcms-1.19            lcms.sh
 build liblcms2       lcms2-2.4            lcms2.sh
 build libglew        glew-1.9.0           libglew.sh
 build gnumake        gnumake-126.2        gnumake.sh
-build wxmac          wxWidgets-2.9.3      wxmac29.sh
+build wxmac          wxWidgets.git        wxmac29.sh
 
 # enblend doesn't need libxmi anymore
 build boost          boost_1_46_1         boost.sh 
@@ -72,6 +72,7 @@ build swig           swig-2.0.9           swig.sh
 build flann          flann-1.8.4-src      flann.sh
 
 build python         Python-2.7.4         python27.sh
+build wxPython       wxWidgets.git        wxpython29.sh
 
 # Following packages are optional. Uncomment if you are building them
 #echo "$pre autopano-sift-C $pst" && cd ../autopano-sift-C    && sh ../scripts/autopano-sift-C.sh;
