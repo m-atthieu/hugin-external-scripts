@@ -40,8 +40,8 @@ build jpeg-turbo     libjpeg-turbo-1.2.90 jpeg-turbo.sh
 
 build png            libpng-1.6.2         libpng16.sh
 build tiff           tiff-4.0.3           tiff.sh
-build ilmbase        ilmbase-2.0.0        ilmbase.sh
-build openexr        openexr-2.0.0        openexr17.sh
+build ilmbase        ilmbase-2.0.1        ilmbase.sh
+build openexr        openexr-2.0.1        openexr2.sh
 build libpano13      libpano13.hg         pano13.sh
 build libexiv2       exiv2-0.23           exiv2.sh
 build liblcms        lcms-1.19            lcms.sh
@@ -76,5 +76,6 @@ build flann          flann-1.8.4-src      flann.sh
 build levmar	     levmar-2.6	          levmar.sh
 
 build python         Python-2.7.5         python27.sh
+build wxPython		 wxPython.git		  wxpython29.sh
 
 echo "That's all, folks!!"
