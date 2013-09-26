@@ -17,6 +17,14 @@ function clean_build_directories()
     done
 }
 
+function notify()
+{
+    which terminal-notifier >& /dev/null
+    [ ! $? -eq 0 ] && return
+    
+    terminal-notifier -message "$1 built" -title "Hugin Dependencies"
+}
+
 function compile_setenv()
 {
     if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then

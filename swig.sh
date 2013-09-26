@@ -63,3 +63,5 @@ done
 
 # merge execs
 merge_execs bin/swig
+
+notify swig

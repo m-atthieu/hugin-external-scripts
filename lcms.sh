@@ -107,3 +107,5 @@ change_library_id "liblcms.$LCMSVER_FULL.dylib" "liblcms.$LCMSVER_M.dylib" "libl
 # clean
 #clean_build_directories
 make distclean 1> /dev/null
+
+notify lcms

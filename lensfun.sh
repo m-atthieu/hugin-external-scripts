@@ -138,3 +138,5 @@ done
 
 # clean
 make distclean 1> /dev/null
+
+notify lensfun

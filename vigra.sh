@@ -124,3 +124,5 @@ chmod +x $REPOSITORYDIR/bin/vigra-config
 
 # clean
 clean_build_directories
+
+notify vigra

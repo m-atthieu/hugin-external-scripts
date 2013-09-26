@@ -109,3 +109,5 @@ merge_execs "bin/iconv"
 
 # clean
 clean_build_directories
+
+notify libiconv

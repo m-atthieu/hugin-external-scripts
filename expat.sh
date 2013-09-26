@@ -149,5 +149,9 @@ if [ -f "$REPOSITORYDIR/lib/libexpat.$EXPATVER_M.dylib" ] ; then
     ln -sfn libexpat.$EXPATVER_M.dylib $REPOSITORYDIR/lib/libexpat.dylib;
 fi
 
+notify expat
+
 # clean
 rm -rf build-{i386,x86_64}
+
+notify expat

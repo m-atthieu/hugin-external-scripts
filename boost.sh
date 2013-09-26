@@ -158,6 +158,8 @@ do
 	#macosx-version-min : -mmacosx-version-min=$(version)
 	if [ "$CXX" = "g++-4.7" ]; then
 	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
+    elif [ "$CXX" = "g++-4.8.1" ]; then
+    	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
 	elif [ "$CXX" = "g++-4.6" ]; then
 	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
 	elif [ "$CXX" = "llvm-g++-4.2" ]; then
@@ -285,3 +287,5 @@ fi
 
 # clean
 rm -rf stage-i386 stage-x86_64
+
+notify boost

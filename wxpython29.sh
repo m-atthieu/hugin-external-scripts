@@ -49,3 +49,5 @@ env \
 env \
     WXWIN=$HOME/Sources/Hugin/External/Build/wxWidgets.git \
     $PYTHON setup.py install WX_CONFIG=$REPOSITORYDIR/bin/wx-config WXPORT=osx_cocoa MONOLITHIC=1
+
+notify wxPython

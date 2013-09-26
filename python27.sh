@@ -47,13 +47,13 @@ mkdir -p "$REPOSITORYDIR/include";
 ARCHARGs=""
 MACSDKDIR=""
 
-#Use the settings of the x86_64 build
+# Use the settings of the x86_64 build
 # for 10.6 compatibility, libpano needs to be built against 10.6 sdk
-#SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
-#MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
+SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
+MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
 
 TARGET=$x64TARGET
-MACSDKDIR=$x64MACSDKDIR
+MACSDKDIR=$MACSDKDIR106 #$x64MACSDKDIR
 ARCHARGs="$x64ONLYARG"
 OSVERSION="$x64OSVERSION"
 CC=$x64CC
@@ -86,3 +86,5 @@ rm -rf $REPOSITORYDIR/Frameworks/Python27.framework/Versions/2.7/lib/python2.7/t
 
 # clean
 rm -rf build-fw
+
+notify python

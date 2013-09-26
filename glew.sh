@@ -137,3 +137,5 @@ cp -R include/GL $REPOSITORYDIR/include/;
 
 # clean
 make distclean 1> /dev/null
+
+notify glew

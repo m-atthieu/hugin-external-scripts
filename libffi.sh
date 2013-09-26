@@ -143,3 +143,5 @@ do
     sed 's/^exec_prefix.*$/exec_prefix=\$\{prefix\}/' $REPOSITORYDIR/arch/$ARCH/lib/pkgconfig/libffi.pc > $REPOSITORYDIR/lib/pkgconfig/libffi.pc
     break;
 done
+
+notify libffi

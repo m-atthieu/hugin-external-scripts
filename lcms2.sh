@@ -141,3 +141,5 @@ then
     install_name_tool -id "$REPOSITORYDIR/lib/liblcms2.$LCMSVER.dylib" "$REPOSITORYDIR/lib/liblcms2.$LCMSVER.dylib"
     ln -sfn liblcms2.$LCMSVER.dylib $REPOSITORYDIR/lib/liblcms2.dylib;
 fi
+
+notify lcms2

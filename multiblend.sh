@@ -128,3 +128,5 @@ do
     lipo $LIPOARGs -create -output "$REPOSITORYDIR/$program";
     strip -x "$REPOSITORYDIR/$program";
 done
+
+notify multiblend

@@ -148,3 +148,5 @@ change_library_id "libjpeg.$JPEGLIBVER.dylib" libjpeg.dylib
 
 # clean
 clean_build_directories
+
+notify jpeg

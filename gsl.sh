@@ -213,3 +213,5 @@ chmod +x $REPOSITORYDIR/bin/gsl-config
 
 # clean
 make distclean 1> /dev/null
+
+notify gsl

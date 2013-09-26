@@ -130,3 +130,4 @@ do
     break;
 done
 
+notify libpng

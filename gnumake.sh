@@ -90,3 +90,5 @@ merge_execs bin/gnumake
 cd ..
 
 make -C make distclean 1> /dev/null
+
+notify gnumake

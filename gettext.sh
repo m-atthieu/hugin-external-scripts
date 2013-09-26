@@ -220,3 +220,5 @@ done
 
 # clean
 clean_build_directories
+
+notify gettext

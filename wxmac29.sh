@@ -282,3 +282,5 @@ done
 
 # clean
 #rm -rf osx-{i386,x86_64}-build
+
+notify wxWidgets

@@ -39,8 +39,10 @@ mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
-# compile
+SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
+MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
 
+# compile
 for ARCH in $ARCHS
 do
     mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
@@ -66,7 +68,7 @@ do
 	ARCHFLAG="-m32"
     elif [ $ARCH = "x86_64" ] ; then
 	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
+	MACSDKDIR=$MACSDKDIR106
 	ARCHARGs="$x64ONLYARG"
 	OSVERSION="$x64OSVERSION"
 	#myPATH=$ORGPATH
@@ -231,3 +233,5 @@ done
 #clean_build_directories
 echo "## distclean ##"
 make distclean 1> /dev/null
+
+notify glib2

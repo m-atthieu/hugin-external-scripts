@@ -205,3 +205,5 @@ fi
 
 # clean
 rm -rf build-*
+
+notify enblend

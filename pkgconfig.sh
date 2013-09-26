@@ -71,3 +71,5 @@ merge_execs bin/pkg-config
 cd ../
 
 make distclean 1> /dev/null
+
+notify pkgconfig
