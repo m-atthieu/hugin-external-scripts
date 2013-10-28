@@ -23,7 +23,6 @@ fail()
     exit 1
 }
 
-let NUMARCH="0"
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
@@ -33,42 +32,25 @@ mkdir -p "$REPOSITORYDIR/include";
 patch -Np0 < ../scripts/patches/pkgconfig-0.25-lion-clang.patch
 
 # compile
+ARCHARGs=""
+MACSDKDIR=""
 
-# remove 64-bit archs from ARCHS
-#remove_64bits_from_ARCH
+compile_setenv
 
-for ARCH in $ARCHS
-do
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+env \
+    CC=$CC CXX=$CXX \
+    CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CPPFLAGS="-I$REPOSITORYDIR/include -isysroot $MACSDKDIR" \
+    LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
+    NEXT_ROOT="$MACSDKDIR" \
+    ./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+    --host="$TARGET" \
+    || fail "configure step for $ARCH";
     
-    ARCHARGs=""
-    MACSDKDIR=""
-
-    compile_setenv
-
-    env \
-	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CPPFLAGS="-I$REPOSITORYDIR/include" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
-	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
-	|| fail "configure step for $ARCH";
-    
-    make clean;
-    make || fail "failed at make step of $ARCH";
-    make install || fail "make install step of $ARCH";
-done
-
-
-# merge execs
-merge_execs bin/pkg-config
-
-cd ../
+make clean;
+make || fail "failed at make step of $ARCH";
+make install || fail "make install step of $ARCH";
 
 make distclean 1> /dev/null
 

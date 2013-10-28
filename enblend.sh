@@ -42,13 +42,6 @@ else
     extraInstall=""
 fi 
 
-let NUMARCH="0"
-
-for i in $ARCHS
-do
-    NUMARCH=$(($NUMARCH + 1))
-done
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -67,38 +60,18 @@ fi
 
 # compile
 # switch between 'configure' or 'cmake' configuration style
-cmake_or_configure='cmake'
-
-for ARCH in $ARCHS
-do
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
+ARCHARGs=""
+MACSDKDIR=""
     
-    ARCHARGs=""
-    MACSDKDIR=""
-    
-    if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
-	TARGET=$i386TARGET
-	MACSDKDIR=$i386MACSDKDIR
-	ARCHARGs="$i386ONLYARG"
-	OSVERSION="$i386OSVERSION"
-	CC=$i386CC_MP # i386CC
-	CXX=$i386CXX_MP # i386CXX
-	CPP=$i386CPP_MP
-	CXXCPP=$i386CXXCPP_MP
-	MARCH=-m32
-    elif [ $ARCH = "x86_64" ] ; then
-	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC_MP # $x64CC
-	CXX=$x64CXX_MP # $x64CXX
-	CPP=$x64CPP_MP
-	CXXCPP=$x64CXXCPP_MP
-	MARCH=-m64
-    fi
+TARGET=$x64TARGET
+MACSDKDIR=$x64MACSDKDIR
+ARCHARGs="$x64ONLYARG"
+OSVERSION="$x64OSVERSION"
+CC=$x64CC_MP # $x64CC
+CXX=$x64CXX_MP # $x64CXX
+CPP=$x64CPP_MP
+CXXCPP=$x64CXXCPP_MP
+MARCH=-m64
     
     # To build documentation, you will need to install the following (port) packages:
     #   freefont-ttf
@@ -117,86 +90,38 @@ do
     # export PATH=/usr/local/texlive/2009/bin/universal-darwin:$PATH
     # To make the change permanent, edit ~/.profile.
 
-    mkdir -p build-$ARCH
-    cd build-$ARCH
-    rm -f CMakeCache.txt
+mkdir -p build-$ARCH
+cd build-$ARCH
+rm -f CMakeCache.txt
 
-	if [ $cmake_or_configure = "configure" ]; then
-    env \
-	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
-	CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
-	CXXFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip" \
-	CPPFLAGS="-fopenmp -I$REPOSITORYDIR/include -I$REPOSITORYDIR/include/OpenEXR -I/usr/include" \
-	LIBS="-lGLEW -framework GLUT -lobjc -framework OpenGL -framework AGL" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
-	NEXT_ROOT="$MACSDKDIR" \
-	PKG_CONFIG_PATH="$REPOSITORYDIR/lib/pkgconfig" \
-	../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH --with-apple-opengl-framework \
-	--disable-image-cache --enable-openmp=yes --enable-gpu-support=no \
-	--with-glew $extraConfig --with-openexr || fail "configure step for $ARCH"
-	else
-    env \
-	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
-	cmake \
-        -DCMAKE_VERBOSE_MAKEFILE:BOOL="ON" \
-        -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR/arch/$ARCH" \
-        -DCMAKE_BUILD_TYPE:STRING="Release" \
-        -DCMAKE_C_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
-        -DCMAKE_CXX_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
-        -DJPEG_INCLUDE_DIR="$REPOSITORYDIR/include" \
-        -DJPEG_LIBRARIES="$REPOSITORYDIR/lib/libjpeg.dylib" \
-        -DPNG_INCLUDE_DIR="$REPOSITORYDIR/include" \
-        -DPNG_LIBRARIES="$REPOSITORYDIR/lib/libpng.dylib" \
-        -DTIFF_INCLUDE_DIR="$REPOSITORYDIR/include" \
-        -DTIFF_LIBRARIES="$REPOSITORYDIR/lib/libtiff.dylib" \
-        -DZLIB_INCLUDE_DIR="/usr/include" \
-        -DZLIB_LIBRARIES="/usr/lib/libz.dylib" \
-	-DVIGRA_INCLUDE_DIR="$REPOSITORYDIR/include" \
-	-DVIGRA_LIBRARIES="$REPOSITORYDIR/lib/libvigraimpex.dylib" \
-	-DENABLE_OPENMP:BOOL="ON" \
-	-DENABLE_IMAGECACHE:BOOL="OFF" \
-	-DENABLE_GPU:BOOL="OFF" \
-        .. || fail "configuring for $ARCH"
-    fi
-    perl -p -i -e 's,#define STRERROR_R_CHAR_P 1,//#define STRERROR_R_CHAR_P 1,' config.h
-    make clean || fail "make clean for $ARCH";
-    make all $extraBuild || fail "make all for $ARCH"
-    make install $extraInstall || fail "make install for $ARCH";
-    cd ..
-done
+env \
+    CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
+    cmake \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL="ON" \
+    -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR" \
+    -DCMAKE_BUILD_TYPE:STRING="Release" \
+    -DCMAKE_C_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
+    -DCMAKE_CXX_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
+    -DJPEG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DJPEG_LIBRARIES="$REPOSITORYDIR/lib/libjpeg.dylib" \
+    -DPNG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DPNG_LIBRARIES="$REPOSITORYDIR/lib/libpng.dylib" \
+    -DTIFF_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DTIFF_LIBRARIES="$REPOSITORYDIR/lib/libtiff.dylib" \
+    -DZLIB_INCLUDE_DIR="/usr/include" \
+    -DZLIB_LIBRARIES="/usr/lib/libz.dylib" \
+    -DVIGRA_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DVIGRA_LIBRARIES="$REPOSITORYDIR/lib/libvigraimpex.dylib" \
+    -DENABLE_OPENMP:BOOL="ON" \
+    -DENABLE_IMAGECACHE:BOOL="OFF" \
+    -DENABLE_GPU:BOOL="OFF" \
+    .. || fail "configuring for $ARCH"
 
-# merge execs
-for program in bin/enblend bin/enfuse
-do
-    if [ $NUMARCH -eq 1 ] ; then
-	if [ -f $REPOSITORYDIR/arch/$ARCHS/$program ] ; then
-	    echo "Moving arch/$ARCHS/$program to $program"
-  	    mv "$REPOSITORYDIR/arch/$ARCHS/$program" "$REPOSITORYDIR/$program";
-  	    strip -x "$REPOSITORYDIR/$program";
-  	    continue
-	else
-	    echo "Program arch/$ARCHS/$program not found. Aborting build";
-	    exit 1;
-	fi
-    fi
-    
-    LIPOARGs=""
-    
-    for ARCH in $ARCHS
-    do
- 	if [ -f $REPOSITORYDIR/arch/$ARCH/$program ] ; then
-	    echo "Adding arch/$ARCH/$program to bundle"
- 	    LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$program"
-	else
-	    echo "File arch/$ARCH/$program was not found. Aborting build";
-	    exit 1;
-	fi
-    done
-    
-    lipo $LIPOARGs -create -output "$REPOSITORYDIR/$program";
-    strip -x "$REPOSITORYDIR/$program";
-done
+perl -p -i -e 's,#define STRERROR_R_CHAR_P 1,//#define STRERROR_R_CHAR_P 1,' config.h
+make clean || fail "make clean for $ARCH";
+make all $extraBuild || fail "make all for $ARCH"
+make install $extraInstall || fail "make install for $ARCH";
+cd ..
 
 # hiding vigra includes
 if [ -d "$REPOSITORYDIR/include/vigra" ]; then

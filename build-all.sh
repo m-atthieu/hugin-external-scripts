@@ -52,31 +52,21 @@ build wxmac          wxWidgets.git        wxmac29.sh
 build boost          boost_1_46_1         boost.sh 
 build gsl	         gsl-1.15		      gsl.sh # needed by enblend.hg, enblend-4.1 & >
 
-# if you already have gcc >= 4.6, this 4 steps are not necessary
-build gmp            gmp-5.1.1            gmp.sh
-build mprf           mpfr-3.1.2           mpfr.sh
-build mpc            mpc-1.0              mpc.sh
-build gcc            gcc-4.8.0            gcc.sh
-
 build vigra          vigra-1.9.0          vigra.sh # needed by enblend
 build enblend-enfuse enblend-enfuse-4.1.1 enblend.sh
 
 build tclap          tclap-1.2.1          tclap.sh
 
 build libffi         libffi-3.0.13        libffi.sh
+build pkg-config     pkg-config-0.25      pkgconfig.sh
 build glib2          glib-2.36.0          glib2.sh
 build lensfun        lensfun-0.2.7        lensfun.sh
 
 build multiblend     multiblend-0.6       multiblend.sh
 build swig           swig-2.0.9           swig.sh
-build flann          flann-1.8.4-src      flann.sh
 
 build python         Python-2.7.4         python27.sh
 build wxPython       wxWidgets.git        wxpython29.sh
-
-# Following packages are optional. Uncomment if you are building them
-#echo "$pre autopano-sift-C $pst" && cd ../autopano-sift-C    && sh ../scripts/autopano-sift-C.sh;
-#echo "$pre panomatic $pst"       && cd ../panomatic-0.9.4    && sh ../scripts/panomatic.sh;
 
 # Separate static libraries into their own directory. Needed to build static tools
 sh ../scripts/static-separation.sh

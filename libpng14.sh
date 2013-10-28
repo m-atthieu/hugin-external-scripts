@@ -43,91 +43,49 @@ case "$(basename $(pwd))" in
 	;;
 esac
 
-let NUMARCH="0"
-for i in $ARCHS ; do
-    NUMARCH=$(($NUMARCH + 1))
-done
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
 # compile
+ARCHARGs=""
+MACSDKDIR=""
 
-for ARCH in $ARCHS
-do
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
-    
-    ARCHARGs=""
-    MACSDKDIR=""
-    
-    if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
-	TARGET=$i386TARGET
-	MACSDKDIR=$i386MACSDKDIR
-	ARCHARGs="$i386ONLYARG"
-	OSVERSION="$i386OSVERSION"
-	CC=$i386CC
-	CXX=$i386CXX
-	ARCHFLAG="-m32"
-    elif [ $ARCH = "x86_64" ] ; then
-	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
-	ARCHFLAG="-m64"
-    fi
-    
+TARGET=$x64TARGET
+MACSDKDIR=$x64MACSDKDIR
+ARCHARGs="$x64ONLYARG"
+OSVERSION="$x64OSVERSION"
+CC=$x64CC
+CXX=$x64CXX
+ARCHFLAG="-m64"
+
     # makefile.darwin
     # includes hack for libpng bug #2009836
-    sed -e 's/-dynamiclib/-dynamiclib \$\(GCCLDFLAGS\)/g' \
-	scripts/makefile.darwin > makefile;
-    
-    make clean;
-    make $OTHERMAKEARGs install-static install-shared \
-	prefix="$REPOSITORYDIR" \
-	ZLIBLIB="$MACSDKDIR/usr/lib" \
-	ZLIBINC="$MACSDKDIR/usr/include" \
-	CC="$CC" CXX="$CXX" \
-	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	OBJCFLAGS="-arch $ARCH" \
-	OBJCXXFLAGS="-arch $ARCH" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -L. -L$ZLIBLIB -lz -mmacosx-version-min=$OSVERSION" \
-	NEXT_ROOT="$MACSDKDIR" \
-	LIBPATH="$REPOSITORYDIR/arch/$ARCH/lib" \
-	BINPATH="$REPOSITORYDIR/arch/$ARCH/bin" \
-	GCCLDFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs" \
-	|| fail "failed at make step of $ARCH";
+sed -e 's/-dynamiclib/-dynamiclib \$\(GCCLDFLAGS\)/g' \
+    scripts/makefile.darwin > makefile;
+
+make clean;
+make $OTHERMAKEARGs install-static install-shared \
+    prefix="$REPOSITORYDIR" \
+    ZLIBLIB="$MACSDKDIR/usr/lib" \
+    ZLIBINC="$MACSDKDIR/usr/include" \
+    CC="$CC" CXX="$CXX" \
+    CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    OBJCFLAGS="-arch $ARCH" \
+    OBJCXXFLAGS="-arch $ARCH" \
+    LDFLAGS="-L$REPOSITORYDIR/lib -L. -L$ZLIBLIB -lz -mmacosx-version-min=$OSVERSION" \
+    NEXT_ROOT="$MACSDKDIR" \
+    LIBPATH="$REPOSITORYDIR/lib" \
+    BINPATH="$REPOSITORYDIR/bin" \
+    GCCLDFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs" \
+    || fail "failed at make step of $ARCH";
 
     # This libpng.dylib is installed as libpng15.15..dylib, so we have to rename them
     # I assume this will be corrected in 1.5.11 or so
-    mv -v $REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL..dylib \
-	$REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL.dylib \
-	|| fail "failed moving $REPOSITORYDIR/arch/$ARCH/lib/libpng$PNGVER_FULL..dylib"
-done
+mv -v $REPOSITORYDIR/lib/libpng$PNGVER_FULL..dylib \
+    $REPOSITORYDIR/lib/libpng$PNGVER_FULL.dylib \
+    || fail "failed moving $REPOSITORYDIR/lib/libpng$PNGVER_FULL..dylib"
 
-# merge libpng
-merge_libraries "lib/libpng$PNGVER_M.a" "lib/libpng$PNGVER_FULL.dylib"
-
-if [ -f "$REPOSITORYDIR/lib/libpng$PNGVER_M.a" ] ; then
-  ln -sfn libpng$PNGVER_M.a $REPOSITORYDIR/lib/libpng.a;
-fi
-
-if [ -f "$REPOSITORYDIR/lib/libpng$PNGVER_FULL.dylib" ] ; then
-    install_name_tool -id "$REPOSITORYDIR/lib/libpng$PNGVER_FULL.dylib" "$REPOSITORYDIR/lib/libpng$PNGVER_FULL.dylib"
-    ln -sfn libpng$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng$PNGVER_M.dylib;
-    ln -sfn libpng$PNGVER_FULL.dylib $REPOSITORYDIR/lib/libpng.dylib;
-fi
-
-#pkgconfig
-for ARCH in $ARCHS
-do
-    mkdir -p $REPOSITORYDIR/lib/pkgconfig
-    sed "s+arch/$ARCH/++" $REPOSITORYDIR/arch/$ARCH/lib/pkgconfig/libpng$PNGVER_M.pc > $REPOSITORYDIR/lib/pkgconfig/libpng$PNGVER_M.pc
-    break;
-done
+ln -sf libpng$PNGVER_M.$PNGVER_M.dylib $REPOSITORYDIR/lib/libpng$PNGVER_M.dylib
 
 notify libpng

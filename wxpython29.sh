@@ -5,7 +5,7 @@
 # Copyright (c) 2007-2008, Ippei Ukai
 
 # prepare
-source ../scripts/functions.sh
+source ../../scripts/functions.sh
 check_SetEnv
 
 fail()
@@ -13,7 +13,6 @@ fail()
     echo "** Failed at $1 **"
     exit 1
 }
-
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
@@ -43,11 +42,11 @@ env \
     OBJCFLAGS="$CFLAGS -arch $ARCH" \
     OBJCXXFLAGS="$CXXFLAGS -arch $ARCH" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
-    WXWIN=$HOME/Sources/Hugin/External/Build/wxWidgets.git \
+    WXWIN=$HOME/Sources/Hugin/External/Build/wxWidgets-2.9.5 \
     $PYTHON setup.py build WX_CONFIG=$REPOSITORYDIR/bin/wx-config WXPORT=osx_cocoa MONOLITHIC=1
 
 env \
-    WXWIN=$HOME/Sources/Hugin/External/Build/wxWidgets.git \
+    WXWIN=$HOME/Sources/Hugin/External/Build/wxWidgets-2.9.5 \
     $PYTHON setup.py install WX_CONFIG=$REPOSITORYDIR/bin/wx-config WXPORT=osx_cocoa MONOLITHIC=1
 
 notify wxPython

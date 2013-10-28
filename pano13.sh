@@ -45,12 +45,6 @@ case $libpanoVsn in
         fail "Unknown libpano version $libpanoVsn. Program aborting."
 esac
 
-let NUMARCH="0"
-for i in $ARCHS
-do
-    NUMARCH=$(($NUMARCH + 1))
-done
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -60,25 +54,9 @@ SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
 MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
 
 # compile
-for ARCH in $ARCHS
-do
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-    mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
-    
-    ARCHARGs=""
-    MACSDKDIR=""
-    
-    if [ $ARCH = "i386" -o $ARCH = "i686" ] ; then
-	TARGET=$i386TARGET
-	MACSDKDIR=$MACSDKDIR106 #$i386MACSDKDIR
-	ARCHARGs="$i386ONLYARG"
-	OSVERSION="$i386OSVERSION"
-	CC=$i386CC
-	CXX=$i386CXX
-	myPATH=$ORGPATH
-	ARCHFLAG="-m32"
-    elif [ $ARCH = "x86_64" ] ; then
+ARCHARGs=""
+MACSDKDIR=""
+
 	TARGET=$x64TARGET
 	MACSDKDIR=$MACSDKDIR106 #$x64MACSDKDIR
 	ARCHARGs="$x64ONLYARG"
@@ -90,7 +68,6 @@ do
 	#   CXX=g++-4.6
 	#   myPATH=/usr/local/bin:$PATH 
 	ARCHFLAG="-m64"
-    fi
     
     #read key 
     
@@ -101,12 +78,12 @@ do
 	CC=$CC CXX=$CXX \
 	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O2 -dead_strip $ARCGFLAG" \
 	CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O2 -dead_strip $ARCGFLAG" \
-	CPPFLAGS="-I$REPOSITORYDIR/include" \
+	CPPFLAGS="-I$REPOSITORYDIR/include -isysroot $MACSDKDIR" \
 	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind $ARCGFLAG" \
 	NEXT_ROOT="$MACSDKDIR" \
 	PKGCONFIG="$REPOSITORYDIR/lib" \
 	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" --exec-prefix=$REPOSITORYDIR/arch/$ARCH \
+	--host="$TARGET" \
 	--without-java \
 	--with-zlib=/usr \
 	--with-png=$REPOSITORYDIR \
@@ -123,96 +100,6 @@ do
     make clean;
     make || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
-done
-
-# merge libpano13
-
-for liba in lib/libpano13.a lib/$GENERATED_DYLIB_NAME
-do
-    if [ $NUMARCH -eq 1 ] ; then
-	if [ -f $REPOSITORYDIR/arch/$ARCHS/$liba ] ; then
-	    echo "Moving arch/$ARCHS/$liba to $liba"
-  	    mv "$REPOSITORYDIR/arch/$ARCHS/$liba" "$REPOSITORYDIR/$liba";
-	    #Power programming: if filename ends in "a" then ...
-	    [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
-  	    continue
-	else
-	    echo "Program arch/$ARCHS/$liba not found. Aborting build";
-	    exit 1;
-	fi
-    fi
-    
-    LIPOARGs=""
-    
-    for ARCH in $ARCHS
-    do
-	if [ -f $REPOSITORYDIR/arch/$ARCH/$liba ] ; then
-	    echo "Adding arch/$ARCH/$liba to bundle"
-	    LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$liba"
-	else
-	    echo "File arch/$ARCH/$liba was not found. Aborting build";
-	    exit 1;
-	fi
-    done
-    
-    lipo $LIPOARGs -create -output "$REPOSITORYDIR/$liba";
-    #Power programming: if filename ends in "a" then ...
-    [ ${liba##*.} = a ] && ranlib "$REPOSITORYDIR/$liba";
-done
-
-if [ -f "$REPOSITORYDIR/lib/$GENERATED_DYLIB_NAME" ] ; then
-  install_name_tool -id "$REPOSITORYDIR/lib/$GENERATED_DYLIB_NAME" "$REPOSITORYDIR/lib/$GENERATED_DYLIB_NAME";
-  ln -sfn $GENERATED_DYLIB_NAME $REPOSITORYDIR/lib/libpano13.dylib;
-  if [ $GENERATED_DYLIB_NAME = $GENERATED_DYLIB_INSTALL_NAME ] ; then : ;
-  else 
-      ln -sfn $GENERATED_DYLIB_NAME $REPOSITORYDIR/lib/$GENERATED_DYLIB_INSTALL_NAME ;
-  fi
-fi
-
-
-# merge execs
-for program in bin/panoinfo bin/PTblender bin/PTcrop bin/PTinfo bin/PTmasker bin/PTmender bin/PToptimizer bin/PTroller bin/PTtiff2psd bin/PTtiffdump bin/PTuncrop
-do
-    LIPOARGs=""
-    if [ $NUMARCH -eq 1 ] ; then
-	mv "$REPOSITORYDIR/arch/$ARCHS/$program" "$REPOSITORYDIR/$program";
-	install_name_tool \
-	    -change "$REPOSITORYDIR/arch/$ARCHS/lib/$GENERATED_DYLIB_INSTALL_NAME" "$REPOSITORYDIR/lib/libpano13.dylib" \
-	    "$REPOSITORYDIR/$program";
-	continue
-    fi
-    
-    for ARCH in $ARCHS
-    do
-	LIPOARGs="$LIPOARGs $REPOSITORYDIR/arch/$ARCH/$program"
-    done
-    
-    lipo $LIPOARGs -create -output "$REPOSITORYDIR/$program";
-    
-    # why are we fixing the individual programs and not the universal one?
-    # Here's what the link to libpano13 looks like
-    # /PATHTOREPOSITORY/repository/arch/i386/lib/libpano13.2.dylib (compatibility version 3.0.0, current version 3.0.0)
-    for ARCH in $ARCHS
-    do
-     install_name_tool \
-	 -change "$REPOSITORYDIR/arch/$ARCH/lib/$GENERATED_DYLIB_INSTALL_NAME" "$REPOSITORYDIR/lib/libpano13.dylib" \
-	 "$REPOSITORYDIR/$program";
-    done
-done
-
-#And do the same for the binaries
-pre="$REPOSITORYDIR/bin"
-for ARCH in $ARCHS
-do
-    for exec_file in $pre/PTblender $pre/PTmasker $pre/PTmender $pre/PTroller $pre/PTcrop $pre/PTinfo $pre/PToptimizer $pre/PTtiff2psd $pre/PTtiffdump $pre/PTuncrop
-    do
-	for lib in $(otool -L $exec_file | grep $REPOSITORYDIR/arch/$ARCH/lib | sed -e 's/ (.*$//' -e 's/^.*\///')
-	do
-	    echo " Changing install name for: $lib inside $exec_file"
-	    install_name_tool -change "$REPOSITORYDIR/arch/$ARCH/lib/$lib" "$REPOSITORYDIR/lib/$lib" $exec_file
-	done
-    done
-done
 
 # clean
 #make distclean 1> /dev/null
