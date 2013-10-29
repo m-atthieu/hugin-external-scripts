@@ -121,7 +121,8 @@ make --jobs=1 || fail "failed at make step of $ARCH";
 make install || fail "make install step of $ARCH";
 
 rm -f $REPOSITORYDIR/lib/$dylib_name;
-
 cd ../;
+
+ln -s x86_64-apple-darwin10-osx_cocoa-unicode-2.9 $REPOSITORYDIR/lib/wx/include/osx_cocoa-unicode-2.9
 
 notify wxWidgets

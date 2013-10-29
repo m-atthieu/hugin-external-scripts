@@ -1,0 +1,71 @@
+# -*- sh -*-
+# Configuration for 2 part universal build
+# Copyright (c) 2007-2008, Ippei Ukai
+
+
+# has to be the absolute path from /
+myREPOSITORYDIR="$HOME/Sources/Hugin/External/repository-2013.0";
+
+# number of jobs that make can use, probably same as the number of CPUs.
+if [ $(uname -p) = i386 ] ; then
+    PROCESSNUM=$(hostinfo | grep "Processors active:" | sed 's/^.*://' | wc -w | sed 's/[^[:digit:]]//g');
+else
+    PROCESSNUM="1"
+fi
+
+mkdir -p $myREPOSITORYDIR;
+
+# gcc suffix that the gcc used for OpenMP programs has
+# for now, it is gcc-4.8, so here goes 4.8 :
+MP_VERSION="4.8.1"
+export GCC_MP_LOCATION="/opt/gnu-compiler-collection"
+
+OSX_RELEASE=$(sw_vers | grep 'ProductVersion:' | grep -o '[0-9]*[0-9]*\.[0-9]*'|cut -d '.' -f 1,2)
+case $OSX_RELEASE in
+    "10.7" | "10.8")
+	export ARCHS="x86_64"
+	export ARCH="x86_64"
+	OSX_DEPLOYMENT_TARGET="10.6"
+	SDK_VERSION="10.8"
+	SDK_BASE_PATH="$(xcode-select -print-path)/Platforms/MacOSX.platform"
+	;;
+	"10.9")
+	export ARCHS="x86_64"
+	export ARCH="x86_64"
+	OSX_DEPLOYMENT_TARGET="10.6"
+	SDK_VERSION="10.9"
+	SDK_BASE_PATH="$(xcode-select -print-path)/Platforms/MacOSX.platform"
+	;;
+    "10.6")
+	export ARCHS="i386 x86_64"
+	OSX_DEPLOYMENT_TARGET="10.6"
+	SDK_VERSION="10.6"
+	SDK_BASE_PATH=""
+	;;
+    *)
+	echo "Unknown MacOSX release number"
+	exit 1
+esac
+
+export \
+    REPOSITORYDIR="$myREPOSITORYDIR" \
+    \
+    x64TARGET="x86_64-apple-darwin10" \
+    x64OSVERSION="$OSX_DEPLOYMENT_TARGET" \
+    x64MACSDKDIR="$SDK_BASE_PATH/Developer/SDKs/MacOSX${SDK_VERSION}.sdk" \
+    x64OPTIMIZE="-march=core2 -mtune=core2 -ftree-vectorize" \
+    x64CC="gcc-4.8.1" \
+    x64CXX="g++-4.8.1" \
+    x64CC_MP="gcc-${MP_VERSION}" \
+    x64CXX_MP="g++-${MP_VERSION}" \
+    x64CPP_MP="cpp-${MP_VERSION}" \
+    x64CXXCPP_MP="cpp-${MP_VERSION}" \
+    \
+    OTHERARGs="" \
+    OTHERMAKEARGs="--jobs=$PROCESSNUM";
+
+# cmake settings
+export CMAKE_INCLUDE_PATH="$REPOSITORYDIR/include"
+export CMAKE_LIBRARY_PATH="$REPOSITORYDIR/lib"
+
+# $Id: SetEnv-universal.txt 1902 2007-02-04 22:27:47Z ippei $

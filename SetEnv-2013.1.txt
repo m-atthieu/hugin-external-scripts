@@ -1,0 +1,80 @@
+# -*- sh -*-
+# Configuration for 2 part universal build
+# Copyright (c) 2007-2008, Ippei Ukai
+
+
+# has to be the absolute path from /
+myREPOSITORYDIR="$HOME/Sources/Hugin/External/repository-2013.1";
+export GCCMP_REPOSITORY_DIR="$HOME/Sources/Hugin/External/gcc-4.8.1"
+
+# number of jobs that make can use, probably same as the number of CPUs.
+if [ $(uname -p) = i386 ] ; then
+    PROCESSNUM=$(hostinfo | grep "Processors active:" | sed 's/^.*://' | wc -w | sed 's/[^[:digit:]]//g');
+else
+    PROCESSNUM="1"
+fi
+
+mkdir -p $myREPOSITORYDIR;
+
+# gcc suffix that the gcc used for OpenMP programs has
+# for now, it is gcc-4.8, so here goes 4.8 :
+MP_VERSION="4.8.1"
+
+OSX_RELEASE=$(sw_vers | grep 'ProductVersion:' | grep -o '[0-9]*\.[0-9]*\.[0-9]*'|cut -d '.' -f 1,2)
+case $OSX_RELEASE in
+    "10.7" | "10.8")
+	export ARCHS="x86_64"
+	OSX_DEPLOYMENT_TARGET="10.6"
+	SDK_VERSION="10.8"
+	SDK_BASE_PATH="$(xcode-select -print-path)/Platforms/MacOSX.platform"
+	;;
+    "10.6")
+	export ARCHS="i386 x86_64"
+	OSX_DEPLOYMENT_TARGET="10.6"
+	SDK_VERSION="10.6"
+	SDK_BASE_PATH=""
+	;;
+    *)
+	echo "Unknown MacOSX release number"
+	exit 1
+esac
+
+export \
+    REPOSITORYDIR="$myREPOSITORYDIR" \
+    \
+    i386TARGET="i386-apple-darwin10" \
+    i386OSVERSION="$OSX_DEPLOYMENT_TARGET" \
+    i386MACSDKDIR="$SDK_BASE_PATH/Developer/SDKs/MacOSX${SDK_VERSION}.sdk" \
+    i386OPTIMIZE="-march=prescott -mtune=pentium-m -ftree-vectorize -fopenmp" \
+    i386CC="gcc" \
+    i386CXX="g++" \
+    i386CC_MP="gcc-${MP_VERSION}" \
+    i386CXX_MP="g++-${MP_VERSION}" \
+    i386CPP_MP="cpp-${MP_VERSION}" \
+    i386CXXCPP_MP="cpp-${MP_VERSION}" \
+    \
+    x64TARGET="x86_64-apple-darwin10" \
+    x64OSVERSION="$OSX_DEPLOYMENT_TARGET" \
+    x64MACSDKDIR="$SDK_BASE_PATH/Developer/SDKs/MacOSX${SDK_VERSION}.sdk" \
+    x64OPTIMIZE="-march=core2 -mtune=core2 -ftree-vectorize -fopenmp" \
+    x64CC="gcc" \
+    x64CXX="g++" \
+    x64CC_MP="gcc-${MP_VERSION}" \
+    x64CXX_MP="g++-${MP_VERSION}" \
+    x64CPP_MP="cpp-${MP_VERSION}" \
+    x64CXXCPP_MP="cpp-${MP_VERSION}" \
+    \
+    OTHERARGs="" \
+    OTHERMAKEARGs="--jobs=$PROCESSNUM";
+
+# Deprecated:
+export \
+    ppcONLYARG="$ppcOPTIMIZE -mmacosx-version-min=$ppcOSVERSION" \
+    i386ONLYARG="$i386OPTIMIZE -mmacosx-version-min=$i386OSVERSION" \
+    x64ONLYARG="$x64OPTIMIZE -mmacosx-version-min=$x64OSVERSION";
+
+# cmake settings
+export CMAKE_INCLUDE_PATH="$REPOSITORYDIR/include"
+export CMAKE_LIBRARY_PATH="$REPOSITORYDIR/lib"
+
+# $Id: SetEnv-universal.txt 1902 2007-02-04 22:27:47Z ippei $
