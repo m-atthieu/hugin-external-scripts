@@ -25,24 +25,30 @@ fail()
 # init
 check_numarchs
 
+ENABLE_DEBUG=""
+if [ $# -eq 1 -a "$1" = "--enable-debug" ]; then
+	ENABLE_DEBUG="--enable-debug --enable-debug_gdb"
+fi
+
+# only for 2.9.3
+wx_version="$(basename $(pwd))"
+if [ "$wx_version" = "wxWidgets-2.9.3" ]; then
+	patch -Np1 < ../scripts/patches/wx-2.9.3-xh_toolb.diff
+	patch -Np1 < ../scripts/patches/wxwidgets-2.9.3-clang.patch
+fi
+
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
-
-# for 10.6 compatibility, wx needs to be built against 10.6 sdk
-SDK_BASE_PATH=$(xcode-select -print-path)/Platforms/MacOSX.platform
-MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
 
 # compile
 ARCH=$ARCHS
 mkdir -p "build-$ARCH"
 cd "build-$ARCH"
     
-ARCHARGs=""
-MACSDKDIR=""
-    
+# wxWidgets needs to be compiled against the 10.6 SDK
 TARGET=$x64TARGET
-MACSDKDIR=$MACSDKDIR106 #$x64MACSDKDIR
+MACSDKDIR=$MACSDKDIR106
 ARCHARGs="$x64ONLYARG"
 OSVERSION="$x64OSVERSION"
 CC=$x64CC
@@ -62,11 +68,25 @@ env \
     --host="$TARGET" --with-macosx-sdk=$MACSDKDIR --with-macosx-version-min=$OSVERSION \
     --enable-monolithic --enable-unicode --with-opengl --disable-compat26 --enable-graphics_ctx --with-cocoa \
     --with-libiconv-prefix=$REPOSITORYDIR --with-libjpeg --with-libtiff --with-libpng --with-zlib \
-    --without-sdl --disable-sdltest --enable-debug \
+    --without-sdl --disable-sdltest ${ENABLE_DEBUG} \
     --enable-shared --disable-static --enable-aui || fail "configure step for $ARCH";
 
 make --jobs=1 || fail "failed at make step of $ARCH";
-make install || fail "make install step of $ARCH";
+make install  || fail "make install step of $ARCH";
+
+if [ "$wx_version" = "wxWidgets-2.9.3" ]; then
+	ln -sf libwx_osx_cocoau-2.9.3.0.0.dylib    $REPOSITORYDIR/lib/libwx_osx_cocoau-2.9.dylib
+	ln -sf libwx_osx_cocoau_gl-2.9.3.0.0.dylib $REPOSITORYDIR/lib/libwx_osx_cocoau_gl-2.9.dylib
+elif [ "$wx_version" = "wxWidgets-3.0.0" ]; then
+	ln -sf libwx_osx_cocoau-3.0.0.0.0.dylib    $REPOSITORYDIR/lib/libwx_osx_cocoau-3.0.dylib
+	ln -sf libwx_osx_cocoau_gl-3.0.0.0.0.dylib $REPOSITORYDIR/lib/libwx_osx_cocoau_gl-3.0.dylib
+elif [ "$wx_version" = "wxWidgets-3.0.1" ]; then
+	ln -sf libwx_osx_cocoau-3.0.0.1.0.dylib    $REPOSITORYDIR/lib/libwx_osx_cocoau-3.0.dylib
+	ln -sf libwx_osx_cocoau_gl-3.0.0.1.0.dylib $REPOSITORYDIR/lib/libwx_osx_cocoau_gl-3.0.dylib
+fi
 
 # no clean (we want to keep object files for debugging purpose)
-#rm -rf osx-{i386,x86_64}-build
+if [ -z "${ENABLE_DEBUG}" ]; then
+	cd ..
+	rm -rf build-$ARCH
+fi

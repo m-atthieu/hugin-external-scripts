@@ -43,8 +43,8 @@ CXX=$x64CXX
 
 env \
     CC=$x64CC CXX=$x64CXX \
-    CFLAGS="-isysroot $x64MACSDKDIR -arch x86_64 $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-    CXXFLAGS="-isysroot $x64MACSDKDIR -arch x86_64 $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CFLAGS="-isysroot $MACSDKDIR -arch x86_64 $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch x86_64 $ARCHARGs $OTHERARGs -O3 -dead_strip" \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$x64OSVERSION -dead_strip -prebind" \
     NEXT_ROOT="$MACSDKDIR" \
@@ -57,4 +57,5 @@ make $OTHERMAKEARGs buildlib || fail "failed at make step of $ARCH";
 make installlib || fail "failed at make install step of $ARCH";
 
 # clean
-make distclean
+cd ..
+rm -rf build-$ARCHS

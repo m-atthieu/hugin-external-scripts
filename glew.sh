@@ -22,7 +22,6 @@ fail()
 }
 
 # init
-check_numarchs
 
 # patch 1.7 for gcc 4.6
 cp config/Makefile.darwin config/Makefile.darwin.org

@@ -42,18 +42,20 @@ cd build-$ARCH
 env \
     CC="$CC" CXX="$CXX" \
     CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip --stdlib=libstdc++" \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
     NEXT_ROOT="$MACSDKDIR" \
     PKG_CONFIG_PATH="$REPOSITORYDIR/lib/pkgconfig" \
     ../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
     --host="$TARGET" \
-    --enable-shared --disable-static || fail "configure step for $ARCH";
+    --enable-imffuzztest --enable-imfhugetest \
+    --enable-shared --enable-static || fail "configure step for $ARCH";
 
 make clean;
 make $OTHERMAKEARGs all || fail "failed at make step of $ARCH";
 make install || fail "make install step of $ARCH";
 
 # clean
-make distclean
+cd ..
+rm -rf build-$ARCH

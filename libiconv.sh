@@ -58,4 +58,6 @@ make clean
 make || fail "failed at make step of $ARCH"
 make $OTHERMAKEARGs install || fail "make install step of $ARCH"
 
-make distclean
+# clean
+cd ..
+rm -rf build-$ARCH

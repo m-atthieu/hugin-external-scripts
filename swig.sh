@@ -20,8 +20,6 @@ fail()
     exit 1
 }
 
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -29,25 +27,22 @@ mkdir -p "$REPOSITORYDIR/include";
 # compile
 ARCH=$ARCHS
     
-    ARCHARGs=""
-    MACSDKDIR=""
-    
-    compile_setenv
+compile_setenv
 
-    env \
-	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-	CPPFLAGS="-I$REPOSITORYDIR/include" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
-	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--disable-ccache --with-boost=$myREPOSITORYDIR/ --without-pcre \
-	--with-python --without-java --without-ruby --without-tcl --without-php --without-perl5 \
-	--host="$TARGET" || fail "configure step for $ARCH";
+env \
+    CC=$CC CXX=$CXX \
+    CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CPPFLAGS="-I$REPOSITORYDIR/include" \
+    LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
+    NEXT_ROOT="$MACSDKDIR" \
+    ./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+    --disable-ccache --with-boost=$myREPOSITORYDIR/ --without-pcre \
+    --with-python --without-java --without-ruby --without-tcl --without-php --without-perl5 \
+    --host="$TARGET" || fail "configure step for $ARCH";
     
-    make clean;
-    make || fail "failed at make step of $ARCH";
-    make install || fail "make install step of $ARCH";
+make clean;
+make || fail "failed at make step of $ARCH";
+make install || fail "make install step of $ARCH";
 
-    make distclean
+make distclean

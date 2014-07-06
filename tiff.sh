@@ -22,7 +22,7 @@ fail()
 }
 
 # init
-check_numarchs
+patch -Np1 < ../scripts/patches/tiff-403-int64.patch
 
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
@@ -44,7 +44,7 @@ cd build-$ARCH
 env \
     CC=$CC CXX=$CXX \
     CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip --stdlib=libstdc++" \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
     NEXT_ROOT="$MACSDKDIR" \
@@ -63,4 +63,5 @@ cd ../;
 #cp "./libtiff/tiffconf.h" "$REPOSITORYDIR/arch/$ARCH/include/tiffconf.h";
 
 # clean
-make distclean
+rm -rf build-$ARCH
+make clean

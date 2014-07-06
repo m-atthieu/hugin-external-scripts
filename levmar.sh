@@ -19,8 +19,6 @@ fail()
     exit 1
 }
 
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -30,19 +28,12 @@ patch -Np1 < ../scripts/patches/levmar-2.6-makefile.patch
 # compile
 ARCH=$ARCHS
     
-ARCHARGs=""
-MACSDKDIR=""
-
 TARGET=$x64TARGET
 MACSDKDIR=$x64MACSDKDIR
 ARCHARGs="$x64ONLYARG"
 OSVERSION="$x64OSVERSION"
 CC=$x64CC
 CXX=$x64CXX
-
-    #mkdir -p build-$ARCH
-    #cd build-$ARCH
-    #rm -f CMakeCache.txt
 
 env \
     CC=$CC CXX=$CXX \
@@ -59,3 +50,6 @@ mkdir -p $REPOSITORYDIR/include/levmar
 cp levmar.h $REPOSITORYDIR/include/levmar
 
 install_name_tool -id $REPOSITORYDIR/lib/liblevmar.dylib $REPOSITORYDIR/lib/liblevmar.dylib
+
+# clean
+make cleanall

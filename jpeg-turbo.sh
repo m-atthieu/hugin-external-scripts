@@ -24,8 +24,6 @@ fail()
 }
 
 # init
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -62,4 +60,5 @@ make || fail "failed at make step of $ARCH";
 make install || fail "make install step of $ARCH";
 
 # clean
-make distclean
+cd ../
+rm -rf build-$ARCH

@@ -22,48 +22,42 @@ fail()
     exit 1
 }
 
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
+patch -Np1 < ../scripts/patches/glib2-_in.patch
+
 # compile
 ARCH=$ARCHS
  
-     ARCHARGs=""
-    MACSDKDIR=""
+TARGET=$x64TARGET
+MACSDKDIR=$x64MACSDKDIR
+ARCHARGs="$x64ONLYARG"
+OSVERSION="$x64OSVERSION"
+CC=$x64CC
+CXX=$x64CXX
+ARCHFLAG="-m64"
 
-    #mkdir -p build-$ARCH
-    #cd build-$ARCH
-    
- 	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
-	ARCHFLAG="-m64"
-    
-    env \
-	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
-	CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
-	CPPFLAGS="-I$REPOSITORYDIR/include" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -L$MACSDKDIR/usr/lib -dead_strip -lresolv -bind_at_load $ARCHFLAG" \
-	NEXT_ROOT="$MACSDKDIR" \
-	./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" \
-	ZLIB_CFLAGS="-I$MACSDKDIR/usr/include" ZLIB_LIBS="-L$MACSDKDIR/usr/lib" \
-	GETTEXT_CFLAGS="-I$REPOSITORYDIR/include" GETTEXT_LIBS="-L$REPOSITORYDIR/lib" \
-	--disable-selinux --disable-fam --disable-xattr \
-	--disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf \
-	--disable-man --disable-dtrace --disable-systemtap \
-	--disable-static --enable-shared || fail "configure step of $ARCH"
-    
-    make clean
-    make || fail "failed at make step of $ARCH"
-    make $OTHERMAKEARGs install || fail "make install step of $ARCH"
+env \
+    CC=$CC CXX=$CXX \
+    CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
+    CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
+    CPPFLAGS="-I$REPOSITORYDIR/include" \
+    LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -L$MACSDKDIR/usr/lib -dead_strip -lresolv -bind_at_load $ARCHFLAG" \
+    NEXT_ROOT="$MACSDKDIR" \
+    ./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+    --host="$TARGET" \
+    ZLIB_CFLAGS="-I$MACSDKDIR/usr/include" ZLIB_LIBS="-L$MACSDKDIR/usr/lib" \
+    GETTEXT_CFLAGS="-I$REPOSITORYDIR/include" GETTEXT_LIBS="-L$REPOSITORYDIR/lib" \
+    --disable-selinux --disable-fam --disable-xattr \
+    --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf \
+    --disable-man --disable-dtrace --disable-systemtap \
+    --disable-static --enable-shared || fail "configure step of $ARCH"
+
+make clean
+make || fail "failed at make step of $ARCH"
+make $OTHERMAKEARGs install || fail "make install step of $ARCH"
 
 # clean
 echo "## distclean ##"

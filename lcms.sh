@@ -26,8 +26,6 @@ fail()
 }
 
 # init
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";

@@ -28,15 +28,14 @@ mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
 #patch
-make install_source
-cd ./make
+#make install_source
+#cd ./make
+mkdir build-$ARCHS
+cd build-$ARCHS
 
 # compile
 ARCH=$ARCHS
 
-ARCHARGs=""
-MACSDKDIR=""
-    
 TARGET=$x64TARGET
 MACSDKDIR=$x64MACSDKDIR
 ARCHARGs="$x64ONLYARG"
@@ -51,13 +50,14 @@ env \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
     NEXT_ROOT="$MACSDKDIR" \
-    ./configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+    ../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
     --host="$TARGET" \
     --with-libiconv-prefix=$REPOSITORYDIR --with-libintl-prefix=$REPOSITORYDIR \
     --program-transform-name='s/^make$/gnumake/' || fail "configure step for $ARCH";
     
     make clean;
-    make || fail "failed at make step of $ARCH";
+    ./build.sh || fail "failed at make step of $ARCH";
     make install || fail "make install step of $ARCH";
 
-make -C make distclean
+cd ..
+rm -rf build-$ARCH

@@ -34,13 +34,13 @@ function check_numarchs()
 function compile_setenv()
 {
     if [ $ARCH != "x86_64" ] ; then
-		echo "\$ARCH is not x86_64"
-		exit -1
-	fi
-	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
+	echo "\$ARCH is not x86_64"
+	exit -1
+    fi
+    TARGET=$x64TARGET
+    MACSDKDIR=$x64MACSDKDIR
+    ARCHARGs="$x64ONLYARG"
+    OSVERSION="$x64OSVERSION"
+    CC=$x64CC
+    CXX=$x64CXX
 }

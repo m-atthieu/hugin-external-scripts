@@ -48,7 +48,7 @@ CXX=$x64CXX
 env \
     CC=$CC CXX=$CXX \
     CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip --stdlib=libstdc++" \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
     NEXT_ROOT="$MACSDKDIR" \
@@ -57,20 +57,6 @@ env \
     --host="$TARGET" \
     --enable-shared \
     || fail "configure step for $ARCH";
-
-#[ -f "libtool-bk" ] || mv "libtool" "libtool-bk"; # just move it once, fix it many times
-#sed -e "s#-dynamiclib#-dynamiclib -arch $ARCH -isysroot $MACSDKDIR#g" libtool-bk > libtool;
-#chmod +x libtool
-    
-    #hack for apple-gcc 4.2
-#gcc_version=$(gcc --version |grep "(GCC)" |cut -d ' ' -f 3|cut -d '.' -f 1,2)
-#if [ "$gcc_version" = "4.2" ] ; then
-#    for dir in Half Iex IlmThread Imath
-#    do
-#	mv $dir/Makefile $dir/Makefile.bk
-#	sed 's/-Wno-long-double//g' $dir/Makefile.bk > $dir/Makefile
-#    done
-#fi
 
 make clean;
 make $OTHERMAKEARGs all || fail "failed at make step of $ARCH";

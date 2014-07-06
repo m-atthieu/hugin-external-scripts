@@ -43,9 +43,6 @@ else
 fi
 
 # compile
-# switch between 'configure' or 'cmake' configuration style
-cmake_or_configure='cmake'
-
 ARCH=$ARCHS
 
 ARCHARGs=""
@@ -65,46 +62,31 @@ mkdir -p build-$ARCH
 cd build-$ARCH
 rm -f CMakeCache.txt
 
-if [ $cmake_or_configure = "configure" ]; then
-    env \
-	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
-	CFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip -Wno-unused-local-typedefs" \
-	CXXFLAGS="-fopenmp -isysroot $MACSDKDIR -I$REPOSITORYDIR/include $MARCH $ARCHARGs $OTHERARGs -dead_strip -Wno-unused-local-typedefs" \
-	CPPFLAGS="-fopenmp -I$REPOSITORYDIR/include -I$REPOSITORYDIR/include/OpenEXR -I/usr/include" \
-	LIBS="-lGLEW -framework GLUT -lobjc -framework OpenGL -framework AGL" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
-	NEXT_ROOT="$MACSDKDIR" \
-	PKG_CONFIG_PATH="$REPOSITORYDIR/lib/pkgconfig" \
-	../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" --with-apple-opengl-framework \
-	--disable-image-cache --enable-openmp=yes --enable-gpu-support=no \
-	--with-glew $extraConfig --with-openexr || fail "configure step for $ARCH"
-else
-    env \
-	CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
-	cmake \
-        -DCMAKE_VERBOSE_MAKEFILE:BOOL="ON" \
-        -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR" \
-        -DCMAKE_BUILD_TYPE:STRING="Release" \
-        -DCMAKE_C_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE -Wno-unused-local-typedefs" \
-        -DCMAKE_CXX_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE -Wno-unused-local-typedefs" \
-        -DJPEG_INCLUDE_DIR="$REPOSITORYDIR/include" \
-        -DJPEG_LIBRARIES="$REPOSITORYDIR/lib/libjpeg.dylib" \
-        -DPNG_INCLUDE_DIR="$REPOSITORYDIR/include" \
-        -DPNG_LIBRARIES="$REPOSITORYDIR/lib/libpng.dylib" \
-        -DTIFF_INCLUDE_DIR="$REPOSITORYDIR/include" \
-        -DTIFF_LIBRARIES="$REPOSITORYDIR/lib/libtiff.dylib" \
-        -DZLIB_INCLUDE_DIR="/usr/include" \
-        -DZLIB_LIBRARIES="/usr/lib/libz.dylib" \
-	-DVIGRA_INCLUDE_DIR="$REPOSITORYDIR/include" \
-	-DVIGRA_LIBRARIES="$REPOSITORYDIR/lib/libvigraimpex.dylib" \
-	-DDOC:BOOL='OFF' \
-	-DENABLE_OPENCL:BOOL='ON' \
-	-DENABLE_OPENMP:BOOL="ON" \
-	-DENABLE_IMAGECACHE:BOOL="OFF" \
-	-DENABLE_GPU:BOOL="OFF" \
-        .. || fail "configuring for $ARCH"
-fi
+env \
+    CC=$CC CXX=$CXX CPP=$CPP CXXCPP=$CXXCPP \
+    cmake \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL="OFF" \
+    -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR" \
+    -DCMAKE_BUILD_TYPE:STRING="Release" \
+    -DCMAKE_C_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE -Wno-unused-local-typedefs" \
+    -DCMAKE_CXX_FLAGS_RELEASE:STRING="-fopenmp $MARCH $ARCHARGs -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE -Wno-unused-local-typedefs" \
+    -DJPEG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DJPEG_LIBRARIES="$REPOSITORYDIR/lib/libjpeg.dylib" \
+    -DPNG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DPNG_LIBRARIES="$REPOSITORYDIR/lib/libpng.dylib" \
+    -DTIFF_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DTIFF_LIBRARIES="$REPOSITORYDIR/lib/libtiff.dylib" \
+    -DZLIB_INCLUDE_DIR="/usr/include" \
+    -DZLIB_LIBRARIES="/usr/lib/libz.dylib" \
+    -DVIGRA_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DVIGRA_LIBRARIES="$REPOSITORYDIR/lib/libvigraimpex.dylib" \
+    -DDOC:BOOL='OFF' \
+    -DENABLE_OPENCL:BOOL='ON' \
+    -DENABLE_OPENMP:BOOL="ON" \
+    -DENABLE_IMAGECACHE:BOOL="OFF" \
+    -DENABLE_GPU:BOOL="OFF" \
+    .. || fail "configuring for $ARCH"
+
 perl -p -i -e 's,#define STRERROR_R_CHAR_P 1,//#define STRERROR_R_CHAR_P 1,' config.h
 make clean || fail "make clean for $ARCH";
 make all $extraBuild || fail "make all for $ARCH"
@@ -116,4 +98,5 @@ if [ -d "$REPOSITORYDIR/include/vigra" ]; then
 fi
 
 # clean
-make distclean
+cd ..
+rm -rf build-$ARCH

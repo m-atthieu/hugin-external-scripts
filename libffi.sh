@@ -30,33 +30,31 @@ mkdir -p "$REPOSITORYDIR/include";
 # compile
 ARCH=$ARCHS
     
-    ARCHARGs=""
-    MACSDKDIR=""
-    
-	TARGET=$x64TARGET
-	MACSDKDIR=$x64MACSDKDIR
-	ARCHARGs="$x64ONLYARG"
-	OSVERSION="$x64OSVERSION"
-	CC=$x64CC
-	CXX=$x64CXX
-    
-    mkdir -p build-$ARCH
-    cd build-$ARCH
-    
-    env \
-	CC=$CC CXX=$CXX \
-	CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
-	CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
-	CPPFLAGS="-I$REPOSITORYDIR/include" \
-	LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -lresolv -bind_at_load" \
-	NEXT_ROOT="$MACSDKDIR" \
-	../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-	--host="$TARGET" \
-	--disable-static --enable-shared  || fail "configure step of $ARCH";
-    echo "## make ##"
-    make clean
-    make || fail "failed at make step of $ARCH"
-    make $OTHERMAKEARGs install || fail "make install step of $ARCH"
+TARGET=$x64TARGET
+MACSDKDIR=$x64MACSDKDIR
+ARCHARGs="$x64ONLYARG"
+OSVERSION="$x64OSVERSION"
+CC=$x64CC
+CXX=$x64CXX
 
-    #make
-    make distclean
+mkdir -p build-$ARCH
+cd build-$ARCH
+
+env \
+    CC=$CC CXX=$CXX \
+    CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip -fstrict-aliasing" \
+    CPPFLAGS="-I$REPOSITORYDIR/include" \
+    LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -lresolv -bind_at_load" \
+    NEXT_ROOT="$MACSDKDIR" \
+    ../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
+    --host="$TARGET" \
+    --disable-static --enable-shared  || fail "configure step of $ARCH";
+echo "## make ##"
+make clean
+make || fail "failed at make step of $ARCH"
+make $OTHERMAKEARGs install || fail "make install step of $ARCH"
+
+#make
+cd ..
+rm -rf build-$ARCH

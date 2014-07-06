@@ -29,8 +29,6 @@ fail()
 }
 
 # init
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -41,9 +39,6 @@ MACSDKDIR106="$SDK_BASE_PATH/Developer/SDKs/MacOSX10.6.sdk"
 
 # compile
 ARCH=$ARCHS
-mkdir -p "$REPOSITORYDIR/arch/$ARCH/bin";
-mkdir -p "$REPOSITORYDIR/arch/$ARCH/lib";
-mkdir -p "$REPOSITORYDIR/arch/$ARCH/include";
 
 ARCHARGs=""
 MACSDKDIR=""
@@ -61,20 +56,23 @@ cd build-$ARCH
 
 env \
     CC=$CC CXX=$CXX \
-    CFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O2 -dead_strip $ARCGFLAG" \
-    CXXFLAGS="-isysroot $MACSDKDIR $ARCHFLAG $ARCHARGs $OTHERARGs -O2 -dead_strip $ARCGFLAG" \
-    CPPFLAGS="-I$REPOSITORYDIR/include" \
-    LDFLAGS="-L$REPOSITORYDIR/lib -mmacosx-version-min=$OSVERSION -dead_strip -prebind $ARCGFLAG" \
     NEXT_ROOT="$MACSDKDIR" \
     PKGCONFIG="$REPOSITORYDIR/lib" \
-    ../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
-    --host="$TARGET" \
-    --without-java \
-    --with-zlib=/usr \
-    --with-png=$REPOSITORYDIR \
-    --with-jpeg=$REPOSITORYDIR \
-    --with-tiff=$REPOSITORYDIR \
-    --enable-shared --disable-static || fail "configure step for $ARCH";
+    cmake \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL="OFF" \
+    -DCMAKE_INSTALL_PREFIX:PATH="$REPOSITORYDIR" \
+    -DCMAKE_BUILD_TYPE:STRING="Release" \
+    -DCMAKE_C_FLAGS_RELEASE:STRING="-arch $ARCH -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
+    -DCMAKE_CXX_FLAGS_RELEASE:STRING="-arch $ARCH -mmacosx-version-min=$OSVERSION -isysroot $MACSDKDIR -DNDEBUG -O3 $OPTIMIZE" \
+    -DJPEG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DJPEG_LIBRARIES="$REPOSITORYDIR/lib/libjpeg.dylib" \
+    -DPNG_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DPNG_LIBRARIES="$REPOSITORYDIR/lib/libpng.dylib" \
+    -DTIFF_INCLUDE_DIR="$REPOSITORYDIR/include" \
+    -DTIFF_LIBRARIES="$REPOSITORYDIR/lib/libtiff.dylib" \
+    -DZLIB_INCLUDE_DIR="/usr/include" \
+    -DZLIB_LIBRARIES="/usr/lib/libz.dylib" \
+    .. || fail "configure for $ARCH"
 
     #Stupid libtool... (perhaps could be done by passing LDFLAGS to make and install)
 #[ -f libtool-bk ] && rm libtool-bak
@@ -86,5 +84,13 @@ make clean;
 make || fail "failed at make step of $ARCH";
 make install || fail "make install step of $ARCH";
 
+install_name_tool -id $REPOSITORYDIR/lib/libpano13.3.dylib $REPOSITORYDIR/lib/libpano13.3.dylib
+
+for bin in PTblender PTcrop PTinfo PTmasker PTmender PToptimizer PTroller PTtiff2psd PTtiffdump PTuncrop 
+do
+    install_name_tool -change libpano13.3.dylib $REPOSITORYDIR/lib/libpano13.3.dylib $REPOSITORYDIR/bin/$bin
+done
+
 # clean
-make distclean
+cd ..
+rm -rf build-$ARCH

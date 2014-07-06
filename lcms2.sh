@@ -9,16 +9,6 @@
 
 # prepare
 
-# export REPOSITORYDIR="/PATH2HUGIN/mac/ExternalPrograms/repository" \
-# ARCHS="ppc i386" \
-#  ppcTARGET="powerpc-apple-darwin8" \
-#  i386TARGET="i386-apple-darwin8" \
-#  ppcMACSDKDIR="/Developer/SDKs/MacOSX10.4u.sdk" \
-#  i386MACSDKDIR="/Developer/SDKs/MacOSX10.3.9.sdk" \
-#  ppcONLYARG="-mcpu=G3 -mtune=G4" \
-#  i386ONLYARG="-mfpmath=sse -msse2 -mtune=pentium-m -ftree-vectorize" \
-#  OTHERARGs="";
-
 # -------------------------------
 # 20120111.0 hvdw initial lcms2 (lcms version 2) script
 # -------------------------------
@@ -32,8 +22,6 @@ fail()
 }
 
 # init
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";

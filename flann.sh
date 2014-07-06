@@ -21,8 +21,6 @@ fail()
     exit 1
 }
 
-check_numarchs
-
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -30,9 +28,6 @@ mkdir -p "$REPOSITORYDIR/include";
 # compile
 ARCH=$ARCHS
     
-ARCHARGs=""
-MACSDKDIR=""
-
 TARGET=$x64TARGET
 MACSDKDIR=$x64MACSDKDIR
 ARCHARGs="$x64ONLYARG"
@@ -66,4 +61,6 @@ make install || fail "make install step of $ARCH";
 
 install_name_tool -id $REPOSITORYDIR/lib/libflann_cpp.1.8.dylib $REPOSITORYDIR/lib/libflann_cpp.1.8.dylib
 
-make distclean
+# clean
+cd ..
+rm -rf build-$ARCH

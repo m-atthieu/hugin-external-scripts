@@ -16,7 +16,6 @@ fail()
         exit 1
 }
 
-check_numarchs
 mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
@@ -28,7 +27,7 @@ mkdir -p build-$ARCH
 cd build-$ARCH
 
 TARGET=$x64TARGET
-MACSDKDIR=$x64MACSDKDIR
+MACSDKDIR=$MACSDKDIR106
 ARCHARGs="$x64ONLYARG"
 OSVERSION="$x64OSVERSION"
 CC=$x64CC
@@ -39,11 +38,12 @@ env \
     CC=$CC CXX=$CXX \
     CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
     CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-    CPPFLAGS="-I$REPOSITORYDIR/include -I/usr/include" \
+    CPPFLAGS="-I$REPOSITORYDIR/include -I$MACSDKDIR/usr/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -L/usr/lib -mmacosx-version-min=$OSVERSION -dead_strip" \
     NEXT_ROOT="$MACSDKDIR" \
     ../configure --prefix="$REPOSITORYDIR" --disable-dependency-tracking \
     --with-zlib-prefix=$MACSDKDIR/usr \
+    --with-sysroot=$MACSDKDIR \
     --host="$TARGET" \
     --enable-shared --disable-static || fail "configure step for $ARCH";
 
@@ -51,4 +51,6 @@ make clean
 make || fail "faild at make step of $ARCH"
 make install || fail "make install step of $ARCH"
 
-make distclean
+# clean
+cd ..
+rm -rf build-$ARCH

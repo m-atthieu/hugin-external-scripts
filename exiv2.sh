@@ -52,7 +52,7 @@ CXX=$x64CXX
 env \
     CC=$CC CXX=$CXX \
     CFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
-    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip" \
+    CXXFLAGS="-isysroot $MACSDKDIR -arch $ARCH $ARCHARGs $OTHERARGs -O3 -dead_strip --stdlib=libstdc++" \
     CPPFLAGS="-I$REPOSITORYDIR/include" \
     LDFLAGS="-L$REPOSITORYDIR/lib -arch $ARCH -mmacosx-version-min=$OSVERSION -dead_strip -prebind" \
     NEXT_ROOT="$MACSDKDIR" \
@@ -61,19 +61,9 @@ env \
     --enable-shared --with-libiconv-prefix=$REPOSITORYDIR --with-libintl-prefix=$REPOSITORYDIR \
     --disable-static  || fail "configure step for $ARCH";
     
-#[ -f "libtool-bk" ] && rm libtool-bk; 
-#mv "libtool" "libtool-bk"; 
-#sed -e "s#-dynamiclib#-shared-libgcc -dynamiclib -arch $ARCH -isysroot $MACSDKDIR#g" \
-#    -e 's/-all_load//g' "libtool-bk" > "libtool";
-#chmod +x libtool
-    
 make clean;
-##cd xmpsdk/src;
-#make xmpsdk
-
-#cd ../../src;    
 make $OTHERMAKEARGs || fail "failed at make step of $ARCH";
 make install || fail "make install step of $ARCH";
 
 # clean
-make distclean 1> /dev/null
+make clean

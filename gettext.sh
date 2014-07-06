@@ -31,17 +31,6 @@ mkdir -p "$REPOSITORYDIR/bin";
 mkdir -p "$REPOSITORYDIR/lib";
 mkdir -p "$REPOSITORYDIR/include";
 
-
-# patch
-# if lion + xcode 4.3 + sdk 10.7+
-# if lion and sdk 10.6, no
-osx_version=$(sw_vers -productVersion|cut -d '.' -f 1,2)
-case "$osx_version" in
-	10.7 | 10.8)
-	#patch -Np0 < ../scripts/patches/gettext-0.18.1.1-lion.patch
-	;;
-esac
-
 # compile
 ARCH=$ARCHS
     
@@ -78,4 +67,5 @@ make || fail "failed at make step of $ARCH";
 make install || fail "make install step of $ARCH";
 
 # clean
-make distclean
+cd ../
+rm -rf build-$ARCH

@@ -15,32 +15,14 @@ fail()
 }
 
 case "$(basename $(pwd))" in
-    "boost_1_44_0")
-	BOOST_VER="1_44"
-	;;
-    "boost_1_45_0")
-	BOOST_VER="1_45"
-	;;
     "boost_1_46_0"|"boost_1_46_1")
 	BOOST_VER="1_46"
 	;;
-    "boost_1_47_0")
-	BOOST_VER="1_47"
+    "boost_1_54_0")
+	BOOST_VER="1_54"
 	;;
-    "boost_1_48_0")
-	BOOST_VER="1_48"
-	;;
-    "boost_1_49_0")
-	BOOST_VER="1_49"
-	;;
-    "boost_1_50_0")
-	BOOST_VER="1_50"
-	;;
-    "boost_1_51_0")
-	BOOST_VER="1_51"
-	;;
-    "boost_1_53_0")
-	BOOST_VER="1_53"
+    "boost_1_55_0")
+	BOOST_VER="1_55"
 	;;
     *)
 	echo "Unknown boost version. Aborting"
@@ -52,21 +34,8 @@ esac
 echo "\n## Version set to $BOOST_VER ##\n"
 
 # install headers
-
-mkdir -p "$REPOSITORYDIR/include"
-rm -rf "$REPOSITORYDIR/include/boost";
-echo "\n## First copying all boost includes to $REPOSITORYDIR/include/ ##"
-echo "## This will take some time ##\n"
-cp -R "./boost" "$REPOSITORYDIR/include/";
-
 echo "## First compiling bjam ##\n"
 case "$BOOST_VER" in
-    1_44|1_45)
-	 cd "./tools/jam/src";
-	 sh "build.sh";
-	 cd "../../../";
-	 BJAM=$(ls ./tools/jam/src/bin.mac*/bjam)
-	 ;;
     1_46)
 	perl -p -i -e 's/-no-cpp-precomp//' tools/build/v2/tools/darwin.jam
 	 cd "./tools/build/v2/engine/src"
@@ -75,7 +44,7 @@ case "$BOOST_VER" in
 	 BJAM=$(ls ./tools/build/v2/engine/src/bin.mac*/bjam)
 	 echo $BJAM
 	 ;;
-    1_47|1_48|1_49|1_50|1_51|1_53)
+    1_47|1_48|1_49|1_50|1_51|1_53|1_54|1_55)
 	perl -p -i -e 's/-no-cpp-precomp//' tools/build/v2/tools/darwin.jam
 	 cd "./tools/build/v2/engine"
 	 sh "build.sh"
@@ -90,7 +59,10 @@ echo "BJAM command is: $BJAM"
 echo "## Done compiling bjam ##"
 
 # init
-check_numarchs
+
+if [ "$BOOST_VER" = "1_55" ]; then
+	patch -F 0 -Np1 < ../scripts/patches/boost-1.55-storage.patch
+fi
 
 mkdir -p "$REPOSITORYDIR/lib";
 
@@ -98,8 +70,7 @@ mkdir -p "$REPOSITORYDIR/lib";
 ARCH=$ARCHS
 
     echo "\n## Now building architecture $ARCH ##\n"
-    rm -rf "stage-$ARCH";
-    mkdir -p "stage-$ARCH";
+    rm -rf "bin.v2";
     
 	MACSDKDIR=$x64MACSDKDIR
 	OSVERSION=$x64OSVERSION
@@ -116,29 +87,26 @@ ARCH=$ARCHS
     SDKVRSION=$(echo $MACSDKDIR | sed 's/^[^1]*\([[:digit:]]*\.[[:digit:]]*\).*/\1/')
     
     echo "CXX should now be known: $CXX"
-    if [ "$CXX" = "" ] ; then
-	boostTOOLSET="--toolset=darwin"
+    if [ "$CXX" = "" -o "$CXX" = "g++" ] ; then
+	#boostTOOLSET="--toolset=darwin"
 	CXX="g++"
+	echo "using darwin : : $(which $CXX) : <cxxflags>\"-isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION --stdlib=libstdc++ $OPTIMIZE\" <linkflags>\"--stdlib=libstdc++\" ;" > ./$ARCH-userconf.jam
+    elif [ "$CXX" = "g++-4.7" ]; then
+	echo "using darwin : : $(which $CXX) : <cxxflags>\"-isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE\" ;" > ./$ARCH-userconf.jam
+    elif [ "$CXX" = "g++-4.6" ]; then
+	echo "using darwin : : $(which $CXX) : <cxxflags>\"-isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE\" ;" > ./$ARCH-userconf.jam
+    elif [ "$CXX" = "llvm-g++-4.2" ]; then
+	echo "using darwin : : $(which $CXX) : <cxxflags>\"-isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE\" ;" > ./$ARCH-userconf.jam
     else
-	#macosx-version : -isysroot $(sdk)
-	#macosx-version-min : -mmacosx-version-min=$(version)
-	if [ "$CXX" = "g++-4.7" ]; then
-	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
-	elif [ "$CXX" = "g++-4.6" ]; then
-	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
-	elif [ "$CXX" = "llvm-g++-4.2" ]; then
-	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
-	else
-	    echo "using darwin : : $(which $CXX) : <cxxflags> -isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE ;" > ./$ARCH-userconf.jam
-	fi
-	boostTOOLSET="--user-config=./$ARCH-userconf.jam"
+	echo "using darwin : : $(which $CXX) : <cxxflags>\"-isysroot $MACSDKDIR -mmacosx-version-min=$OSVERSION $OPTIMIZE\" ;" > ./$ARCH-userconf.jam
     fi
-    
+    boostTOOLSET="--user-config=./$ARCH-userconf.jam"
+        
     
     # hack that sends extra arguments to g++
-    $BJAM -a --stagedir="stage-$ARCH" --prefix=$REPOSITORYDIR $boostTOOLSET \
+    $BJAM -a --prefix=$REPOSITORYDIR $boostTOOLSET \
 	--with-thread --with-filesystem --with-system --with-regex --with-iostreams \
-	--with-date_time --with-signals \
+	--with-date_time --with-signals --with-test \
 	variant=release \
 	architecture="$boostARCHITECTURE" address-model="$boostADDRESSMODEL" install
 
